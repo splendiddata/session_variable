@@ -1,0 +1,474 @@
+/*
+ * Copyright (c) Splendid Data Product Development B.V. 2013
+ *
+ * This program is free software: You may redistribute and/or modify under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at Client's option) any
+ * later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, Client should obtain one via www.gnu.org/licenses/.
+ */
+-- set client_min_messages = DEBUG4;
+-- init
+create extension session_variable;
+select session_variable.init();
+ init 
+------
+    0
+(1 row)
+
+select session_variable.get('does not exist', null::text);                                 -- fails: no variables exist
+ERROR:  variable or constant 'does not exist' does not exists
+select session_variable.create_variable('some_date', 'date'::regtype, '2015-07-15'::date);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('an integer', 'integer'::regtype, 123456789);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('just text', 'text'::regtype, 'just some text'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('varchar', 'varchar'::regtype, 'a varchar text'::varchar);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_constant('numeric const', 'numeric'::regtype, 123.45);
+ create_constant 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('initially null', 'text'::regtype, null::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('a_record', 'record'::regtype, ('some text', '2015-07-17'::date, 123.45::numeric));
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('int[][]', 'int[][]'::regtype, '{{1,2},{3,4},{5,6}}'::int[][]);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('wrongdate', 'text'::regtype, '2015-07-15'::date); -- fails: wrong datatype
+ERROR:  initial_value should be of type text, but is of type date
+select session_variable.get('does not exist', null::text);                                 -- fails: does not exist
+ERROR:  variable or constant 'does not exist' does not exists
+select session_variable.type_of('some_date');
+ type_of 
+---------
+ date
+(1 row)
+
+select session_variable.type_of('an integer');
+ type_of 
+---------
+ integer
+(1 row)
+
+select session_variable.type_of('varchar');
+      type_of      
+-------------------
+ character varying
+(1 row)
+
+select session_variable.type_of('numeric const');
+ type_of 
+---------
+ numeric
+(1 row)
+
+select session_variable.type_of('int[][]');
+  type_of  
+-----------
+ integer[]
+(1 row)
+
+select session_variable.type_of('does not exist');                                         -- fails: does not exist
+ERROR:  variable or constant 'does not exist' does not exists
+select session_variable.type_of(null);                                                     -- fails: variable_or_constan_name must be filled
+ERROR:  variable_or_constant_name must be filled
+select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
+  to_char   
+------------
+ 2015-07-15
+(1 row)
+
+select session_variable.get('an integer', null::integer);
+    get    
+-----------
+ 123456789
+(1 row)
+
+select session_variable.get('just text', null::text);
+      get       
+----------------
+ just some text
+(1 row)
+
+select session_variable.get('varchar', null::varchar);
+      get       
+----------------
+ a varchar text
+(1 row)
+
+select session_variable.get('numeric const', null::numeric);
+  get   
+--------
+ 123.45
+(1 row)
+
+select session_variable.get('numeric const', null::text);                                  -- fails: wrong type
+ERROR:  please invoke as session_variable.get('numeric const', null::numeric)
+select session_variable.get('int[][]', null::int[][]);
+         get         
+---------------------
+ {{1,2},{3,4},{5,6}}
+(1 row)
+
+select session_variable.get('initially null', null::text);
+ get 
+-----
+ 
+(1 row)
+
+select session_variable.get('a_record', null::record);
+               get               
+---------------------------------
+ ("some text",07-17-2015,123.45)
+(1 row)
+
+select session_variable.exists('int[][]');
+ exists 
+--------
+ t
+(1 row)
+
+select session_variable.exists('initially null');
+ exists 
+--------
+ t
+(1 row)
+
+select session_variable.exists('does not exist');
+ exists 
+--------
+ f
+(1 row)
+
+select session_variable.drop('int[][]');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.set('some_date', '2050-12-11'::date);
+    set     
+------------
+ 07-15-2015
+(1 row)
+
+select session_variable.set('an integer', 987654321);
+    set    
+-----------
+ 123456789
+(1 row)
+
+select session_variable.set('just text', 'a new bit of text'::text);
+      set       
+----------------
+ just some text
+(1 row)
+
+select session_variable.set('varchar', 'an altered varchar text'::varchar);
+      set       
+----------------
+ a varchar text
+(1 row)
+
+select session_variable.set('initially null', 'now filled'::text);
+ set 
+-----
+ 
+(1 row)
+
+select session_variable.set('a_record', null::record);
+               set               
+---------------------------------
+ ("some text",07-17-2015,123.45)
+(1 row)
+
+select session_variable.set('numeric const', 223344);                                      -- fails: constants cannot be set
+ERROR:  constant "numeric const" cannot be set
+select session_variable.set('does not exist', null::text);                                 -- fails: does not exist
+ERROR:  variable "does not exist" does not exists
+select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
+  to_char   
+------------
+ 2050-12-11
+(1 row)
+
+select session_variable.get('an integer', null::integer);
+    get    
+-----------
+ 987654321
+(1 row)
+
+select session_variable.get('just text', null::text);
+        get        
+-------------------
+ a new bit of text
+(1 row)
+
+select session_variable.get('varchar', null::varchar);
+           get           
+-------------------------
+ an altered varchar text
+(1 row)
+
+select session_variable.get('numeric const', null::numeric);
+  get   
+--------
+ 123.45
+(1 row)
+
+select session_variable.set('initially null', null::text);
+    set     
+------------
+ now filled
+(1 row)
+
+select session_variable.get('a_record', null::record);
+ get 
+-----
+ 
+(1 row)
+
+select session_variable.init();
+ init 
+------
+    7
+(1 row)
+
+select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
+  to_char   
+------------
+ 2015-07-15
+(1 row)
+
+select session_variable.get('an integer', null::integer);
+    get    
+-----------
+ 123456789
+(1 row)
+
+select session_variable.get('just text', null::text);
+      get       
+----------------
+ just some text
+(1 row)
+
+select session_variable.get('varchar', null::varchar);
+      get       
+----------------
+ a varchar text
+(1 row)
+
+select session_variable.set('initially null', null::text);
+ set 
+-----
+ 
+(1 row)
+
+select session_variable.get('numeric const', null::numeric);
+  get   
+--------
+ 123.45
+(1 row)
+
+select session_variable.alter_value('some_date', '1900-01-01'::date);
+ alter_value 
+-------------
+ 07-15-2015
+(1 row)
+
+select session_variable.alter_value('an integer', 0);
+ alter_value 
+-------------
+   123456789
+(1 row)
+
+select session_variable.alter_value('just text', ''::text);
+  alter_value   
+----------------
+ just some text
+(1 row)
+
+select session_variable.alter_value('varchar', null::varchar);
+  alter_value   
+----------------
+ a varchar text
+(1 row)
+
+select session_variable.alter_value('numeric const', 3333333333333333333333.3333333333333);
+ alter_value 
+-------------
+      123.45
+(1 row)
+
+select session_variable.alter_value('a_record', (123, 456, 'altered text'));
+           alter_value           
+---------------------------------
+ ("some text",07-17-2015,123.45)
+(1 row)
+
+select session_variable.alter_value('does not exist', null::text);                         -- fails: does not exist
+ERROR:  Variable "does not exist" does not exists
+select session_variable.alter_value('an integer', null::text);                             -- fails: wrong datatype
+ERROR:  value should be of type integer, but is of type text
+select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
+  to_char   
+------------
+ 1900-01-01
+(1 row)
+
+select session_variable.get('an integer', null::integer);
+ get 
+-----
+   0
+(1 row)
+
+select session_variable.get('just text', null::text);
+ get 
+-----
+ 
+(1 row)
+
+select session_variable.get('varchar', null::varchar);
+ get 
+-----
+ 
+(1 row)
+
+select session_variable.get('numeric const', null::numeric);
+                 get                  
+--------------------------------------
+ 3333333333333333333333.3333333333333
+(1 row)
+
+select session_variable.get('a_record', null::record);
+           get            
+--------------------------
+ (123,456,"altered text")
+(1 row)
+
+select session_variable.drop('some_date');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('an integer');
+ drop 
+------
+ t
+(1 row)
+
+select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');               -- fails: has just been dropped
+ERROR:  variable or constant 'some_date' does not exists
+select session_variable.get('an integer', null::integer);                                  -- fails: has just been dropped
+ERROR:  variable or constant 'an integer' does not exists
+select session_variable.get('just text', null::text);
+ get 
+-----
+ 
+(1 row)
+
+select session_variable.get('varchar', null::varchar);
+ get 
+-----
+ 
+(1 row)
+
+select session_variable.get('numeric const', null::numeric);
+                 get                  
+--------------------------------------
+ 3333333333333333333333.3333333333333
+(1 row)
+
+select session_variable.get('a_record', null::record);
+           get            
+--------------------------
+ (123,456,"altered text")
+(1 row)
+
+select session_variable.drop('just text');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('varchar');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('numeric const');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('initially null');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('a_record');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('does not exist');                                            -- fails: does not exist
+ERROR:  variable or constant "does not exist" does not exists
+select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');               -- fails: has just been dropped
+ERROR:  variable or constant 'some_date' does not exists
+select session_variable.get('an integer', null::integer);                                  -- fails: has just been dropped
+ERROR:  variable or constant 'an integer' does not exists
+select session_variable.get('just text', null::text);                                      -- fails: has just been dropped
+ERROR:  variable or constant 'just text' does not exists
+select session_variable.get('varchar', null::varchar);                                     -- fails: has just been dropped
+ERROR:  variable or constant 'varchar' does not exists
+select session_variable.get('numeric const', null::numeric);                               -- fails: has just been dropped
+ERROR:  variable or constant 'numeric const' does not exists
+select session_variable.get('a_record', null::record);                                     -- fails: has just been dropped
+ERROR:  variable or constant 'a_record' does not exists
+-- cleanup
+drop schema if exists session_variable cascade;
+NOTICE:  drop cascades to extension session_variable

@@ -1,0 +1,1030 @@
+/*
+ * Copyright (c) Splendid Data Product Development B.V. 2013
+ *
+ * This program is free software: You may redistribute and/or modify under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at Client's option) any
+ * later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, Client should obtain one via www.gnu.org/licenses/.
+ */
+
+-- init
+create extension session_variable;
+select session_variable.init();
+ init 
+------
+    0
+(1 row)
+
+
+select session_variable.create_variable('a', 'text'::regtype, 'a'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('b', 'text'::regtype, 'b'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('c', 'text'::regtype, 'c'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('d', 'text'::regtype, 'd'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('e', 'text'::regtype, 'e'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('f', 'text'::regtype, 'f'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('g', 'text'::regtype, 'g'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('h', 'text'::regtype, 'h'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('i', 'text'::regtype, 'i'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('j', 'text'::regtype, 'j'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('k', 'text'::regtype, 'k'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('l', 'text'::regtype, 'l'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('m', 'text'::regtype, 'm'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('n', 'text'::regtype, 'n'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('o', 'text'::regtype, 'o'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('p', 'text'::regtype, 'p'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('q', 'text'::regtype, 'q'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('r', 'text'::regtype, 'r'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('s', 'text'::regtype, 's'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('t', 'text'::regtype, 't'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('u', 'text'::regtype, 'u'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+
+select session_variable.init();
+ init 
+------
+   21
+(1 row)
+
+
+select session_variable.get('a', null::text);
+ get 
+-----
+ a
+(1 row)
+
+select session_variable.get('b', null::text);
+ get 
+-----
+ b
+(1 row)
+
+select session_variable.get('c', null::text);
+ get 
+-----
+ c
+(1 row)
+
+select session_variable.get('d', null::text);
+ get 
+-----
+ d
+(1 row)
+
+select session_variable.get('e', null::text);
+ get 
+-----
+ e
+(1 row)
+
+select session_variable.get('f', null::text);
+ get 
+-----
+ f
+(1 row)
+
+select session_variable.get('g', null::text);
+ get 
+-----
+ g
+(1 row)
+
+select session_variable.get('h', null::text);
+ get 
+-----
+ h
+(1 row)
+
+select session_variable.get('i', null::text);
+ get 
+-----
+ i
+(1 row)
+
+select session_variable.get('j', null::text);
+ get 
+-----
+ j
+(1 row)
+
+select session_variable.get('k', null::text);
+ get 
+-----
+ k
+(1 row)
+
+select session_variable.get('l', null::text);
+ get 
+-----
+ l
+(1 row)
+
+select session_variable.get('m', null::text);
+ get 
+-----
+ m
+(1 row)
+
+select session_variable.get('n', null::text);
+ get 
+-----
+ n
+(1 row)
+
+select session_variable.get('o', null::text);
+ get 
+-----
+ o
+(1 row)
+
+select session_variable.get('p', null::text);
+ get 
+-----
+ p
+(1 row)
+
+select session_variable.get('q', null::text);
+ get 
+-----
+ q
+(1 row)
+
+select session_variable.get('r', null::text);
+ get 
+-----
+ r
+(1 row)
+
+select session_variable.get('s', null::text);
+ get 
+-----
+ s
+(1 row)
+
+select session_variable.get('t', null::text);
+ get 
+-----
+ t
+(1 row)
+
+select session_variable.get('u', null::text);
+ get 
+-----
+ u
+(1 row)
+
+select session_variable.get('v', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'v' does not exists
+
+select session_variable.drop('f');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('g');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('a');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('u');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('l');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('v');                                                         -- doesn't exist
+ERROR:  variable or constant "v" does not exists
+
+select session_variable.get('a', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'a' does not exists
+select session_variable.get('b', null::text);
+ get 
+-----
+ b
+(1 row)
+
+select session_variable.get('c', null::text);
+ get 
+-----
+ c
+(1 row)
+
+select session_variable.get('d', null::text);
+ get 
+-----
+ d
+(1 row)
+
+select session_variable.get('e', null::text);
+ get 
+-----
+ e
+(1 row)
+
+select session_variable.get('f', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'f' does not exists
+select session_variable.get('g', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'g' does not exists
+select session_variable.get('h', null::text);
+ get 
+-----
+ h
+(1 row)
+
+select session_variable.get('i', null::text);
+ get 
+-----
+ i
+(1 row)
+
+select session_variable.get('j', null::text);
+ get 
+-----
+ j
+(1 row)
+
+select session_variable.get('k', null::text);
+ get 
+-----
+ k
+(1 row)
+
+select session_variable.get('l', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'l' does not exists
+select session_variable.get('m', null::text);
+ get 
+-----
+ m
+(1 row)
+
+select session_variable.get('n', null::text);
+ get 
+-----
+ n
+(1 row)
+
+select session_variable.get('o', null::text);
+ get 
+-----
+ o
+(1 row)
+
+select session_variable.get('p', null::text);
+ get 
+-----
+ p
+(1 row)
+
+select session_variable.get('q', null::text);
+ get 
+-----
+ q
+(1 row)
+
+select session_variable.get('r', null::text);
+ get 
+-----
+ r
+(1 row)
+
+select session_variable.get('s', null::text);
+ get 
+-----
+ s
+(1 row)
+
+select session_variable.get('t', null::text);
+ get 
+-----
+ t
+(1 row)
+
+select session_variable.get('u', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'u' does not exists
+select session_variable.get('v', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'v' does not exists
+
+select session_variable.drop('m');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('n');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('o');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('p');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('q');
+ drop 
+------
+ t
+(1 row)
+
+
+select session_variable.get('a', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'a' does not exists
+select session_variable.get('b', null::text);
+ get 
+-----
+ b
+(1 row)
+
+select session_variable.get('c', null::text);
+ get 
+-----
+ c
+(1 row)
+
+select session_variable.get('d', null::text);
+ get 
+-----
+ d
+(1 row)
+
+select session_variable.get('e', null::text);
+ get 
+-----
+ e
+(1 row)
+
+select session_variable.get('f', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'f' does not exists
+select session_variable.get('g', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'g' does not exists
+select session_variable.get('h', null::text);
+ get 
+-----
+ h
+(1 row)
+
+select session_variable.get('i', null::text);
+ get 
+-----
+ i
+(1 row)
+
+select session_variable.get('j', null::text);
+ get 
+-----
+ j
+(1 row)
+
+select session_variable.get('k', null::text);
+ get 
+-----
+ k
+(1 row)
+
+select session_variable.get('l', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'l' does not exists
+select session_variable.get('m', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'm' does not exists
+select session_variable.get('n', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'n' does not exists
+select session_variable.get('o', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'o' does not exists
+select session_variable.get('p', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'p' does not exists
+select session_variable.get('q', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'q' does not exists
+select session_variable.get('r', null::text);
+ get 
+-----
+ r
+(1 row)
+
+select session_variable.get('s', null::text);
+ get 
+-----
+ s
+(1 row)
+
+select session_variable.get('t', null::text);
+ get 
+-----
+ t
+(1 row)
+
+select session_variable.get('u', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'u' does not exists
+select session_variable.get('v', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'v' does not exists
+
+select session_variable.create_variable('a', 'text'::regtype, 'a'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('g', 'text'::regtype, 'g'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('q', 'text'::regtype, 'q'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('p', 'text'::regtype, 'p'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('m', 'text'::regtype, 'm'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('n', 'text'::regtype, 'n'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('o', 'text'::regtype, 'o'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+
+select session_variable.get('a', null::text);
+ get 
+-----
+ a
+(1 row)
+
+select session_variable.get('b', null::text);
+ get 
+-----
+ b
+(1 row)
+
+select session_variable.get('c', null::text);
+ get 
+-----
+ c
+(1 row)
+
+select session_variable.get('d', null::text);
+ get 
+-----
+ d
+(1 row)
+
+select session_variable.get('e', null::text);
+ get 
+-----
+ e
+(1 row)
+
+select session_variable.get('f', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'f' does not exists
+select session_variable.get('g', null::text);
+ get 
+-----
+ g
+(1 row)
+
+select session_variable.get('h', null::text);
+ get 
+-----
+ h
+(1 row)
+
+select session_variable.get('i', null::text);
+ get 
+-----
+ i
+(1 row)
+
+select session_variable.get('j', null::text);
+ get 
+-----
+ j
+(1 row)
+
+select session_variable.get('k', null::text);
+ get 
+-----
+ k
+(1 row)
+
+select session_variable.get('l', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'l' does not exists
+select session_variable.get('m', null::text);
+ get 
+-----
+ m
+(1 row)
+
+select session_variable.get('n', null::text);
+ get 
+-----
+ n
+(1 row)
+
+select session_variable.get('o', null::text);
+ get 
+-----
+ o
+(1 row)
+
+select session_variable.get('p', null::text);
+ get 
+-----
+ p
+(1 row)
+
+select session_variable.get('q', null::text);
+ get 
+-----
+ q
+(1 row)
+
+select session_variable.get('r', null::text);
+ get 
+-----
+ r
+(1 row)
+
+select session_variable.get('s', null::text);
+ get 
+-----
+ s
+(1 row)
+
+select session_variable.get('t', null::text);
+ get 
+-----
+ t
+(1 row)
+
+select session_variable.get('u', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'u' does not exists
+select session_variable.get('v', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'v' does not exists
+
+select session_variable.init();
+ init 
+------
+   18
+(1 row)
+
+
+select session_variable.create_variable('a', 'text'::regtype, 'a'::text);                  -- already exists
+ERROR:  Variable "a" already exists
+select session_variable.create_variable('v', 'text'::regtype, 'v'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('f', 'text'::regtype, 'f'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('l', 'text'::regtype, 'l'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('u', 'text'::regtype, 'u'::text);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+
+select session_variable.get('a', null::text);
+ get 
+-----
+ a
+(1 row)
+
+select session_variable.get('b', null::text);
+ get 
+-----
+ b
+(1 row)
+
+select session_variable.get('c', null::text);
+ get 
+-----
+ c
+(1 row)
+
+select session_variable.get('d', null::text);
+ get 
+-----
+ d
+(1 row)
+
+select session_variable.get('e', null::text);
+ get 
+-----
+ e
+(1 row)
+
+select session_variable.get('f', null::text);
+ get 
+-----
+ f
+(1 row)
+
+select session_variable.get('g', null::text);
+ get 
+-----
+ g
+(1 row)
+
+select session_variable.get('h', null::text);
+ get 
+-----
+ h
+(1 row)
+
+select session_variable.get('i', null::text);
+ get 
+-----
+ i
+(1 row)
+
+select session_variable.get('j', null::text);
+ get 
+-----
+ j
+(1 row)
+
+select session_variable.get('k', null::text);
+ get 
+-----
+ k
+(1 row)
+
+select session_variable.get('l', null::text);
+ get 
+-----
+ l
+(1 row)
+
+select session_variable.get('m', null::text);
+ get 
+-----
+ m
+(1 row)
+
+select session_variable.get('n', null::text);
+ get 
+-----
+ n
+(1 row)
+
+select session_variable.get('o', null::text);
+ get 
+-----
+ o
+(1 row)
+
+select session_variable.get('p', null::text);
+ get 
+-----
+ p
+(1 row)
+
+select session_variable.get('q', null::text);
+ get 
+-----
+ q
+(1 row)
+
+select session_variable.get('r', null::text);
+ get 
+-----
+ r
+(1 row)
+
+select session_variable.get('s', null::text);
+ get 
+-----
+ s
+(1 row)
+
+select session_variable.get('t', null::text);
+ get 
+-----
+ t
+(1 row)
+
+select session_variable.get('u', null::text);
+ get 
+-----
+ u
+(1 row)
+
+select session_variable.get('v', null::text);
+ get 
+-----
+ v
+(1 row)
+
+
+select session_variable.init();
+ init 
+------
+   22
+(1 row)
+
+
+select session_variable.drop('g');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('h');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('p');
+ drop 
+------
+ t
+(1 row)
+
+select session_variable.drop('k');
+ drop 
+------
+ t
+(1 row)
+
+
+select session_variable.get('a', null::text);
+ get 
+-----
+ a
+(1 row)
+
+select session_variable.get('b', null::text);
+ get 
+-----
+ b
+(1 row)
+
+select session_variable.get('c', null::text);
+ get 
+-----
+ c
+(1 row)
+
+select session_variable.get('d', null::text);
+ get 
+-----
+ d
+(1 row)
+
+select session_variable.get('e', null::text);
+ get 
+-----
+ e
+(1 row)
+
+select session_variable.get('f', null::text);
+ get 
+-----
+ f
+(1 row)
+
+select session_variable.get('g', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'g' does not exists
+select session_variable.get('h', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'h' does not exists
+select session_variable.get('i', null::text);
+ get 
+-----
+ i
+(1 row)
+
+select session_variable.get('j', null::text);
+ get 
+-----
+ j
+(1 row)
+
+select session_variable.get('k', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'k' does not exists
+select session_variable.get('l', null::text);
+ get 
+-----
+ l
+(1 row)
+
+select session_variable.get('m', null::text);
+ get 
+-----
+ m
+(1 row)
+
+select session_variable.get('n', null::text);
+ get 
+-----
+ n
+(1 row)
+
+select session_variable.get('o', null::text);
+ get 
+-----
+ o
+(1 row)
+
+select session_variable.get('p', null::text);                                              -- doesn't exist
+ERROR:  variable or constant 'p' does not exists
+select session_variable.get('q', null::text);
+ get 
+-----
+ q
+(1 row)
+
+select session_variable.get('r', null::text);
+ get 
+-----
+ r
+(1 row)
+
+select session_variable.get('s', null::text);
+ get 
+-----
+ s
+(1 row)
+
+select session_variable.get('t', null::text);
+ get 
+-----
+ t
+(1 row)
+
+select session_variable.get('u', null::text);
+ get 
+-----
+ u
+(1 row)
+
+select session_variable.get('v', null::text);
+ get 
+-----
+ v
+(1 row)
+
+
+-- cleanup
+drop schema if exists session_variable cascade;
+NOTICE:  drop cascades to extension session_variable
