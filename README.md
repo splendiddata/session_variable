@@ -8,4 +8,4 @@ Install as a normal Posrgres database extension:
 and then in the Porstres database execute:
  - create extension session_variable;
 
-For more information please see <a href="session_variable.html">https://github.com/splendiddata/session_variable/session_variable.html</a>.
+For more information please see <a href="https://github.com/splendiddata/session_variable/">https://github.com/splendiddata/session_variable/session_variable.html</a>.
