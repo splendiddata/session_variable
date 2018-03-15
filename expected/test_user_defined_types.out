@@ -70,7 +70,7 @@ select session_variable.get('initially null', null::schema_1.my_type);
 (1 row)
 
 select session_variable.get('initially null', null::schema_2.my_type);                      -- fails: wrong type
-ERROR:  please invoke as session_variable.get('initially null', null::schema_1.my_type)
+ERROR:  The variable's internal type schema_1.my_type, cannot be cast to type schema_2.my_type
 select session_variable.type_of('schema_1.my_var');
      type_of      
 ------------------

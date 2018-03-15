@@ -8,8 +8,8 @@
 <body>
   <h1>The session_variable database extension</h1>
   <p>The session_variable extension provides a way to create and maintain
-    session scoped variables and constants, more or less like Oracle's global
-    variables.</p>
+    session scoped variables and constants. This extension could be used as an 
+    alternative for Oracle's global constants and variables.</p>
   <p>
     The session_variable extension registers variables and constants. But
     internally they are intermixed and treated as the same. There is just a
@@ -714,6 +714,40 @@
   <p>
     Example:<br>
     <code>select session_variable.type_of('my_variable');</code>
+  </p>
+
+  <h3>
+    <a name="is_constant">session_variable.get_session_variable_version()</a>
+  </h3>
+  <p>
+    Returns the code version of the extension, currently '1.0.1'. 
+  </p>
+  <table class="arguments">
+    <tr>
+      <th class="arguments" colspan="3">arguments</th>
+    </tr>
+    <tr>
+      <td class="arguments" colspan="3">none</td>
+    </tr>
+    <tr>
+      <th class="arguments" colspan="3">Returns</th>
+    </tr>
+    <tr>
+      <td class="arguments argname">&nbsp;</td>
+      <td class="arguments argtype">text</td>
+      <td class="arguments argdesc">The code version of the session_variable
+       extension.</td>
+    </tr>
+    <tr>
+      <th class="arguments" colspan="3">Exceptions</th>
+    </tr>
+    <tr>
+      <td class="arguments" colspan="3">none</td>
+    </tr>
+  </table>
+  <p>
+    Example:<br>
+    <code>select session_variable.get_session_variable_version();</code>
   </p>
 
   <h2>Security</h2>

@@ -28,6 +28,7 @@
 #include "utils/builtins.h"
 #include "utils/syscache.h"
 #include "utils/lsyscache.h"
+#include "parser/parse_coerce.h"
 
 #include "session_variable.h"
 
@@ -39,14 +40,14 @@ PG_MODULE_MAGIC
 static Oid pg_catalogOID;
 static SessionVariable* variables = NULL;
 
+int getTypeLength(Oid typeOid);
 /*
- * Finds the type name in the type cache and returns whether or not it is a varlena type
+ * Finds the type length in the type cache. -1 for varlena, otherwise 1,2,4 or 8
  *
  * @param Oid typeOid - Identification of the type
- * @return bool true if the type is a variable length type
+ * @return int typlen from pg_type
  */
-bool isTypeVarlena(Oid typeOid);
-bool isTypeVarlena(Oid typeOid)
+int getTypeLength(Oid typeOid)
 {
 
 	HeapTuple typTup;
@@ -61,11 +62,176 @@ bool isTypeVarlena(Oid typeOid)
 	}
 	typ = (Form_pg_type) GETSTRUCT(typTup);
 
-	result = typ->typlen == -1;
+	result = typ->typlen;
 
 	ReleaseSysCache(typTup);
 
 	return result;
+}
+
+Datum coerceInput(Oid inputType, Oid internalType, int internalTypeLength,
+		Datum input, bool* castFailed);
+/*
+ * Returns a Datum in the expected type or null if no (assignment) implicit cast can be found.
+ *
+ * BEWARE! the output is malloced instead of palloced. Thus it can be stored directly as session variable.
+ *
+ * @param Oid inputType: The data type of the input data as obtained from the function invocation
+ * @param Oid expectedType: The data type that is used for internal storage of the session variable
+ * @param int typeLength: -1 for varlena or the number of bytes for scalars
+ * @param Datum input: The (detoasted) input
+ * @param bool* castFailed: will be set to false if the coercion completed correctly of true if it failed
+ * @return Datum
+ */
+Datum coerceInput(Oid inputType, Oid internalType, int internalTypeLength,
+		Datum input, bool* castFailed)
+{
+	CoercionPathType coercionPathType;
+	Oid coercionFunctionOid;
+	Oid outputFunctionOid;
+	Oid inputFunctionOid;
+	Oid inputFunctionParam;
+	Datum coercedInput;
+	Datum mallocedResult;
+	char* stringValue;
+	bool typeIsVarlena;
+
+	*castFailed = true;
+
+	if (inputType == internalType)
+	{
+		coercionPathType = COERCION_PATH_RELABELTYPE;
+	}
+	else
+	{
+		coercionPathType = find_coercion_pathway(internalType, inputType,
+				COERCION_ASSIGNMENT, &coercionFunctionOid);
+	}
+
+	switch (coercionPathType)
+	{
+	case COERCION_PATH_RELABELTYPE:
+		coercedInput = input;
+		break;
+	case COERCION_PATH_FUNC:
+		coercedInput = OidFunctionCall1(coercionFunctionOid, input);
+		break;
+	case COERCION_PATH_COERCEVIAIO:
+		getTypeOutputInfo(inputType, &outputFunctionOid, &typeIsVarlena);
+		stringValue = OidOutputFunctionCall(outputFunctionOid, input);
+		getTypeInputInfo(internalType, &inputFunctionOid, &inputFunctionParam);
+		coercedInput = OidInputFunctionCall(inputFunctionOid, stringValue,
+				inputFunctionParam, -1);
+		break;
+	default:
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE), (errmsg("value must be of type %s, but is of type %s", getTypeName(inputType) ,getTypeName(internalType) ))));
+		return (Datum) NULL;
+		break;
+	}
+
+	if (internalTypeLength < 0)
+	{
+		mallocedResult = (Datum) malloc( VARHDRSZ + VARSIZE(coercedInput));
+		SET_VARSIZE(mallocedResult, VARSIZE(coercedInput));
+		memcpy(VARDATA(mallocedResult), VARDATA(coercedInput),
+				VARSIZE(coercedInput));
+	}
+#ifndef USE_FLOAT8_BYVAL
+	else if (internalTypeLength > SIZEOF_DATUM)
+	{
+		mallocedResult = (Datum) malloc(internalTypeLength);
+		memcpy((void*) mallocedResult, (void*) coercedInput,
+				internalTypeLength);
+	}
+#endif
+	else
+	{
+		mallocedResult = coercedInput;
+	}
+
+	*castFailed = false;
+
+	return mallocedResult;
+}
+
+Datum coerceOutput(Oid internalType, int internalTypeLength, Datum internalData,
+		Oid outputType, bool* castFailed);
+/*
+ * Returns a Datum in the expected type or null if no (assignment) implicit cast can be found. The result is palloced if necessary
+ *
+ * @param Oid internalType: The defined type of the session variable
+ * @param int internalTypeLength: The typlen of the defined type of the session variable
+ * @param Datum internalData: The content of the variable
+ * @param Oid outputType: The type of the expected output
+ *  @param bool* castFailed: will be set to false if the coercion completed correctly of true if it failed
+ * @return Datum
+ */
+Datum coerceOutput(Oid internalType, int internalTypeLength, Datum internalData,
+		Oid outputType, bool* castFailed)
+{
+	CoercionPathType coercionPathType;
+	Oid coercionFunctionOid;
+	Oid outputFunctionOid;
+	Oid inputFunctionOid;
+	Oid inputFunctionParam;
+	Datum result;
+	char* stringValue;
+	bool typeIsVarlena;
+
+	*castFailed = true;
+
+	if (internalType == outputType)
+	{
+		coercionPathType = COERCION_PATH_RELABELTYPE;
+	}
+	else
+	{
+		coercionPathType = find_coercion_pathway(outputType, internalType,
+				COERCION_ASSIGNMENT, &coercionFunctionOid);
+	}
+
+	switch (coercionPathType)
+	{
+	case COERCION_PATH_RELABELTYPE:
+		if (internalTypeLength < 0)
+		{
+			result = (Datum) palloc(VARHDRSZ + VARSIZE(internalData));
+			SET_VARSIZE(result, VARSIZE(internalData));
+			memcpy(VARDATA(result), VARDATA(internalData),
+					VARSIZE(internalData));
+
+		}
+#ifndef USE_FLOAT8_BYVAL
+		else if (internalTypeLength > SIZEOF_DATUM)
+		{
+			result = (Datum) palloc(internalTypeLength);
+			memcpy((void*) result, &internalData, internalTypeLength);
+		}
+#endif
+		else
+		{
+			result = internalData;
+		}
+		*castFailed = false;
+		return result;
+	case COERCION_PATH_FUNC:
+		result = OidFunctionCall1(coercionFunctionOid, internalData);
+		*castFailed = false;
+		return result;
+	case COERCION_PATH_COERCEVIAIO:
+		getTypeOutputInfo(internalType, &outputFunctionOid, &typeIsVarlena);
+		stringValue = OidOutputFunctionCall(outputFunctionOid, internalData);
+		getTypeInputInfo(outputType, &inputFunctionOid, &inputFunctionParam);
+		result = OidInputFunctionCall(inputFunctionOid, stringValue,
+				inputFunctionParam, -1);
+		*castFailed = false;
+		return result;
+	default:
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE), (errmsg("The variable's internal type %s, cannot be cast to type %s", getTypeName(internalType) ,getTypeName(outputType) ))));
+		return (Datum) NULL;
+	}
 }
 
 void logVariable(int logLevel, char* leadingText, SessionVariable* variable);
@@ -76,21 +242,21 @@ void logVariable(int logLevel, char* leadingText, SessionVariable* variable)
 		elog(logLevel, "%s 0:null", leadingText);
 	}
 	elog(logLevel,
-			"%s %p:%s, type=%d,%s, isVarlena=%d, isConstant=%d, isNull=%d, prior=%p:%s, next=%p:%s",
+			"%s %p:%s, type=%d,%s, typeLength=%d, isConstant=%d, isNull=%d, prior=%p:%s, next=%p:%s",
 			leadingText, variable, variable->name, variable->type,
-			getTypeName(variable->type), variable->isVarlena,
+			getTypeName(variable->type), variable->typeLength,
 			variable->isConstant, variable->isNull, variable->prior,
 			variable->prior == NULL ? "-" : variable->prior->name,
 			variable->next,
 			variable->next == NULL ? "-" : variable->next->name);
 }
 
+void removeVariableRecursively(SessionVariable* v);
 /*
  * Recursively removes the variable definition and all its subordinates
  *
  * @param SessionVariable* v The variable definition to be removed. If null, the function will return immediately.
  */
-void removeVariableRecursively(SessionVariable* v);
 void removeVariableRecursively(SessionVariable* v)
 {
 	if (v == NULL)
@@ -107,7 +273,7 @@ void removeVariableRecursively(SessionVariable* v)
 	 * The variable is created with malloc() instead of palloc(), so must be
 	 * freed using free() here instead of pfree().
 	 */
-	if (v->isVarlena)
+	if (v->typeLength < 0 || v->typeLength > sizeof(void *))
 	{
 		free((void*) v->content);
 	}
@@ -115,19 +281,19 @@ void removeVariableRecursively(SessionVariable* v)
 	free((void*) v);
 }
 
+SessionVariable* createVariable(text* variableName, bool isConst, Oid valueType,
+		int typeLength, bool isNull, Datum value);
 /*
  * Creates the variable
  *
  * @param text* variableName Name of the variable
  * @param bool isConst Is the variable a constant
  * @param Oid valueType the type of the content
- * @param bool isVarlena: Is this a variable length data type
- * @param Datum value or null if none.
+ * @param int typeLength  The length of the type, -1 for varlena
+ * @param Datum value or null if none. BEWARE! The content of value is supposed to be malloced instead of palloced!
  */
 SessionVariable* createVariable(text* variableName, bool isConst, Oid valueType,
-		bool isVarlena, bool isNull, Datum value);
-SessionVariable* createVariable(text* variableName, bool isConst, Oid valueType,
-		bool isVarlena, bool isNull, Datum value)
+		int typeLength, bool isNull, Datum value)
 {
 	/*
 	 * The variable is to be stored as session variable (read: static variable).
@@ -138,7 +304,7 @@ SessionVariable* createVariable(text* variableName, bool isConst, Oid valueType,
 
 	elog(DEBUG3,
 			"createVariable(%s, isConst=%d, valueType=%d, isVarlena=%d, isNull=%d, value)",
-			text_to_cstring(variableName), isConst, valueType, isVarlena,
+			text_to_cstring(variableName), isConst, valueType, typeLength,
 			isNull);
 
 	result->prior = NULL;
@@ -148,28 +314,17 @@ SessionVariable* createVariable(text* variableName, bool isConst, Oid valueType,
 	memcpy(result->name, VARDATA(variableName),
 	VARSIZE(variableName) - VARHDRSZ);
 	result->name[VARSIZE(variableName) - VARHDRSZ] = '\0';
-	if (isNull)
-	{
-		result->content = (Datum) NULL;
-	}
-	else if (isVarlena)
-	{
-		result->content = (Datum) malloc(VARSIZE(value));
-		memcpy((void*) result->content, (void*) value, VARSIZE(value));
-	}
-	else
-	{
-		result->content = value;
-	}
-	result->type = valueType;
-	result->isVarlena = isVarlena;
 	result->isConstant = isConst;
+	result->type = valueType;
+	result->typeLength = typeLength;
 	result->isNull = isNull;
+	result->content = value;
 
 	logVariable(DEBUG2, "createVariable() = ", result);
 	return result;
 }
 
+void buildBTree(void);
 /*
  * Transforms the list of SessionVariables that has just been loaded from the session_variable.variables table
  * into a binary tree.
@@ -177,7 +332,6 @@ SessionVariable* createVariable(text* variableName, bool isConst, Oid valueType,
  * next pointer containing the address of the next SessionVariable or null at the end of the list.
  * The variables static variable will be overwritten with the starting point of the b-tree.
  */
-void buildBTree(void);
 void buildBTree(void)
 {
 	SessionVariable *btreeHelper[32];
@@ -224,12 +378,12 @@ void buildBTree(void)
 	}
 }
 
+int reload(void);
 /*
  * Walks through the session_variable.variables table to build the SessionVariable b-tree in variables.
  *
  * @return int The number or SessionVariables created
  */
-int reload(void);
 int reload()
 {
 	char* sql =
@@ -243,14 +397,15 @@ int reload()
 					" order by variable_name";
 	text* variableName = NULL;
 	bool isConstValue = false;
-	Oid valueType = NULL;
-	Datum valueByteArray = NULL;
-	Datum value = NULL;
+	Oid valueType = InvalidOid;
+	Datum value = (Datum) NULL;
+	Datum valueByteArray;
 	bool isNull;
 	Portal cursor = NULL;
 	int nrVariables = 0;
 	SessionVariable** nextVar = &variables;
-	bool isVarlena = false;
+	int typeLength;
+	bool castFailed;
 
 	/*
 	 * Clear the old content (if any).
@@ -275,18 +430,31 @@ int reload()
 						2);
 		valueType = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc,
 				3, &isNull);
-		isVarlena = isTypeVarlena(valueType);
+		typeLength = getTypeLength(valueType);
 		value = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 4,
 				&isNull);
-		if (!isNull)
+		if (isNull)
+		{
+			value = (Datum) NULL;
+		}
+		else
 		{
 			valueByteArray = (Datum) PG_DETOAST_DATUM(value);
 			value = (Datum) VARDATA(valueByteArray);
-			if ((isVarlena
+			if ((typeLength < 0
 					&& VARSIZE(valueByteArray) - VARHDRSZ != VARSIZE(value))
-					|| (!isVarlena
+#ifdef USE_FLOAT8_BYVAL
+					|| (typeLength > 0
 							&& VARSIZE(valueByteArray) - VARHDRSZ
-									!= SIZEOF_DATUM))
+									!= SIZEOF_DATUM)
+#else
+					|| (typeLength > 0 && typeLength <= SIZEOF_DATUM
+							&& VARSIZE(valueByteArray) - VARHDRSZ
+							!= SIZEOF_DATUM)
+					|| (typeLength > SIZEOF_DATUM
+							&& VARSIZE(valueByteArray) - VARHDRSZ != typeLength)
+#endif
+					)
 			{
 				/*
 				 * The Datum containing the content of the value is wrapped in a bytea datum and stored.
@@ -301,19 +469,33 @@ int reload()
 				SPI_finish();
 				return 0;
 			}
-			if (!isVarlena)
+#ifdef USE_FLOAT8_BYVAL
+			if (typeLength > 0)
 			{
 				Datum tmp;
 				memcpy(&tmp, (void*) value, SIZEOF_DATUM);
 				value = tmp;
 			}
+#else
+			if (typeLength > 0 && typeLength <= SIZEOF_DATUM)
+			{
+				Datum tmp;
+				memcpy(&tmp, (void*) value, SIZEOF_DATUM);
+				value = tmp;
+			}
+#endif
+			/*
+			 * we want the value to be malloced instead of palloced.
+			 */
+			value = coerceInput(valueType, valueType, typeLength, value,
+					&castFailed);
 		}
 
 		/*
 		 * Create the new value and link it to its predecessor.
 		 */
 		*nextVar = createVariable(variableName, isConstValue, valueType,
-				isVarlena, isNull, value);
+				typeLength, isNull, value);
 		nextVar = &(*nextVar)->next;
 
 		nrVariables++;
@@ -329,13 +511,13 @@ int reload()
 	return nrVariables;
 }
 
+bool insertVariable(SessionVariable* variable);
 /*
  * Inserts the variable into the session_variable.variables table
  *
  * @param SessionVariable* variable
  * @return bool: true if ok
  */
-bool insertVariable(SessionVariable* variable);
 bool insertVariable(SessionVariable* variable)
 {
 	char* sql = "insert into session_variable.variables "
@@ -377,7 +559,7 @@ bool insertVariable(SessionVariable* variable)
 	else
 	{
 		Datum contentWrapper;
-		if (variable->isVarlena)
+		if (variable->typeLength < 0)
 		{
 			contentWrapper = (Datum) palloc(
 			VARHDRSZ + VARSIZE(variable->content));
@@ -385,6 +567,15 @@ bool insertVariable(SessionVariable* variable)
 			memcpy(VARDATA(contentWrapper), (void*) variable->content,
 					VARSIZE(variable->content));
 		}
+#ifndef USE_FLOAT8_BYVAL
+		else if (variable->typeLength > SIZEOF_DATUM)
+		{
+			contentWrapper = (Datum) palloc(VARHDRSZ + variable->typeLength);
+			SETVARSIZE(contentWrapper, VARHDRSZ + variable->typeLength);
+			memcpy(VARDATA(contentWrapper), (void*) variable->content,
+					variable->typeLength);
+		}
+#endif
 		else
 		{
 			contentWrapper = (Datum) palloc(VARHDRSZ + SIZEOF_DATUM);
@@ -403,12 +594,12 @@ bool insertVariable(SessionVariable* variable)
 	return result;
 }
 
+void updateVariable(SessionVariable* variable);
 /*
  * Updates the variable's initial value in the session_variable.variables table
  *
  * @param SessionVariable* variable
  */
-void updateVariable(SessionVariable* variable);
 void updateVariable(SessionVariable* variable)
 {
 	char* sql = "update session_variable.variables"
@@ -428,7 +619,7 @@ void updateVariable(SessionVariable* variable)
 	else
 	{
 		Datum contentWrapper;
-		if (variable->isVarlena)
+		if (variable->typeLength < 0)
 		{
 			contentWrapper = (Datum) palloc(
 			VARHDRSZ + VARSIZE(variable->content));
@@ -436,11 +627,20 @@ void updateVariable(SessionVariable* variable)
 			memcpy(VARDATA(contentWrapper), (void*) variable->content,
 					VARSIZE(variable->content));
 		}
+#ifndef USE_FLOAT8_BYVAL
+		else if (variable->typeLength > SIZEOF_DATUM)
+		{
+			contentWrapper = (Datum) palloc(VARHDRSZ + variable->typeLength);
+			SETVARSIZE(contentWrapper, VARHDRSZ + variable->typeLength);
+			memcpy(VARDATA(contentWrapper), (void*) variable->content,
+					variable->typeLength);
+		}
+#endif
 		else
 		{
 			contentWrapper = (Datum) palloc(VARHDRSZ + SIZEOF_DATUM);
 			SET_VARSIZE(contentWrapper, VARHDRSZ + SIZEOF_DATUM);
-			memcpy((void*) VARDATA(contentWrapper), &variable->content,
+			memcpy(VARDATA(contentWrapper), (void*) &variable->content,
 			SIZEOF_DATUM);
 		}
 		val[0] = (Datum) contentWrapper;
@@ -455,13 +655,13 @@ void updateVariable(SessionVariable* variable)
 	SPI_finish();
 }
 
+void deleteVariable(text* variablename);
 /*
  * Deletes the directory reference from the file_system.directory_reference table
  *
  * @param text* directoryRefereceName
  * @return int the result of the SPI_execute_with_args() invocation
  */
-void deleteVariable(text* variablename);
 void deleteVariable(text* variableName)
 {
 	char* sql =
@@ -477,6 +677,8 @@ void deleteVariable(text* variableName)
 	SPI_finish();
 }
 
+SessionVariable* searchVariable(char* variableName, SessionVariable** lvl,
+		bool* found);
 /*
  * Searches the binary tree for the variableName
  *
@@ -496,8 +698,6 @@ void deleteVariable(text* variableName)
  * @return SessionVariable*: If found == true, the var that we were looking for.
  *              else the var under which the new variable should be stored of null if no variables exist yet.
  */
-SessionVariable* searchVariable(char* variableName, SessionVariable** lvl,
-		bool* found);
 SessionVariable* searchVariable(char* variableName, SessionVariable** lvl,
 		bool* found)
 {
@@ -541,21 +741,21 @@ SessionVariable* searchVariable(char* variableName, SessionVariable** lvl,
 	return *lvl;
 }
 
+bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
+		int typeLength, bool isNull, Datum value);
 /*
- * Stores the variable with the specified data in memory and in the session_varialbe.variables table
+ * Stores the variable with the specified data in memory and in the session_variable.variables table
  *
  * @param text* variableName: Name of the variable to be stored
  * @param bool isConst: Is this variable to be treated as constant
  * @param Oid valueType: Data type of the variable content
- * @param bool isVarlena: Is this a variable length data type
+ * @param int typeLength: Is this a variable length data type
  * @param bool isNull: Is the content NULL
  * @param Datum value: The value of the variable, may be NULL
  * @return bool: true if ok
  */
 bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
-		bool isVarlena, bool isNull, Datum value);
-bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
-		bool isVarlena, bool isNull, Datum value)
+		int typeLength, bool isNull, Datum value)
 {
 	bool found;
 	SessionVariable* parentLevel;
@@ -565,12 +765,27 @@ bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
 	parentLevel = searchVariable(varName, &variables, &found);
 	if (found)
 	{
+		if (value && typeLength < 0)
+		{
+			/*
+			 * The value has been malloced instead of palloced, so must be freed if an error occurs.
+			 */
+			free((void*) value);
+		}
+#ifndef USE_FLOAT8_BYVAL
+		if (value && typeLength > SIZEOF_DATUM)
+		{
+			free((void*) value);
+		}
+#endif
 		ereport(ERROR,
 				(errcode(ERRCODE_UNIQUE_VIOLATION) , (errmsg("Variable \"%s\" already exists", varName ))));
 		return false;
 	}
-	variable = createVariable(variableName, isConst, valueType, isVarlena,
+
+	variable = createVariable(variableName, isConst, valueType, typeLength,
 			isNull, value);
+
 	if (parentLevel == NULL)
 	{
 		variables = variable;
@@ -609,13 +824,15 @@ PG_FUNCTION_INFO_V1(create_variable);
 Datum create_variable( PG_FUNCTION_ARGS)
 {
 	text* variableName = NULL;
-	Oid type = NULL;
-	Oid typeOid = NULL;
-	Datum content = NULL;
-	Oid contentTypeOid = NULL;
-	bool isVarlena = false;
+	Oid type = InvalidOid;
+	Oid typeOid = InvalidOid;
+	Datum content = (Datum) NULL;
+	Oid contentTypeOid = InvalidOid;
+	int typeLength;
 	bool isNull = false;
 	bool result;
+	int contentTypeLength;
+	bool castFailed;
 
 	if (PG_NARGS() < 2 || PG_NARGS() > 3)
 	{
@@ -630,22 +847,17 @@ Datum create_variable( PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED), (errmsg("variable_name must be filled"))));
 		PG_RETURN_BOOL(false);
 	}
-	else
-	{
-		variableName = PG_GETARG_TEXT_P(0);
-	}
+	variableName = PG_GETARG_TEXT_P(0);
+
 	if (PG_ARGISNULL(1))
 	{
 		ereport(ERROR,
 				(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED), (errmsg("variable_type must be filled"))));
 		PG_RETURN_BOOL(false);
 	}
-	else
-	{
-		type = PG_GETARG_OID(1);
-		typeOid = DatumGetObjectId(type);
-		isVarlena = isTypeVarlena(typeOid);
-	}
+	type = PG_GETARG_OID(1);
+	typeOid = DatumGetObjectId(type);
+	typeLength = getTypeLength(typeOid);
 
 	elog(DEBUG1, "@>create_variable('%s')", text_to_cstring(variableName));
 
@@ -653,13 +865,15 @@ Datum create_variable( PG_FUNCTION_ARGS)
 	if (!isNull)
 	{
 		contentTypeOid = get_fn_expr_argtype(fcinfo->flinfo, 2);
-		if (typeOid != contentTypeOid)
+		if (typeOid == contentTypeOid)
 		{
-			ereport(ERROR,
-					(errcode(ERRCODE_INVALID_PARAMETER_VALUE), (errmsg("initial_value should be of type %s, but is of type %s", getTypeName(typeOid), getTypeName(contentTypeOid) ))));
-			PG_RETURN_BOOL(false);
+			contentTypeLength = typeLength;
 		}
-		if (isVarlena)
+		else
+		{
+			contentTypeLength = getTypeLength(contentTypeOid);
+		}
+		if (contentTypeLength < 0)
 		{
 			content = (Datum) PG_GETARG_VARLENA_P(2);
 		}
@@ -667,9 +881,22 @@ Datum create_variable( PG_FUNCTION_ARGS)
 		{
 			content = PG_GETARG_DATUM(2);
 		}
+
+		/*
+		 * Make sure the new content is malloced instead of palloced, and cast to the right type of course.
+		 */
+		content = coerceInput(contentTypeOid, typeOid, typeLength, content,
+				&castFailed);
+		if (castFailed)
+		{
+			/*
+			 * Something went wrong, but that has already been logged
+			 */
+			PG_RETURN_BOOL(false);
+		}
 	}
 
-	result = saveNewVariable(variableName, false, type, isVarlena, isNull,
+	result = saveNewVariable(variableName, false, type, typeLength, isNull,
 			content);
 
 	elog(DEBUG1, "@<create_variable('%s')", text_to_cstring(variableName));
@@ -684,12 +911,14 @@ PG_FUNCTION_INFO_V1(create_constant);
 Datum create_constant( PG_FUNCTION_ARGS)
 {
 	text* variableName = NULL;
-	Oid type = NULL;
-	Oid typeOid = NULL;
-	Datum content = NULL;
-	Oid contentTypeOid = NULL;
-	bool isVarlena = false;
+	Oid type = InvalidOid;
+	Oid typeOid = InvalidOid;
+	Datum content = (Datum) NULL;
+	Oid contentTypeOid = InvalidOid;
+	int typeLength;
+	int contentTypeLength;
 	bool result;
+	bool castFailed;
 
 	if (PG_NARGS() != 3)
 	{
@@ -703,12 +932,9 @@ Datum create_constant( PG_FUNCTION_ARGS)
 	{
 		ereport(ERROR,
 				(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED), (errmsg("constant_name must be filled"))));
-		PG_RETURN_BOOL(false);;
+		PG_RETURN_BOOL(false);
 	}
-	else
-	{
-		variableName = PG_GETARG_TEXT_P(0);
-	}
+	variableName = PG_GETARG_TEXT_P(0);
 
 	if (PG_ARGISNULL(1))
 	{
@@ -716,25 +942,24 @@ Datum create_constant( PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED), (errmsg("constant_type must be filled"))));
 		PG_RETURN_BOOL(false);
 	}
-	else
-	{
-		type = PG_GETARG_OID(1);
-		typeOid = DatumGetObjectId(type);
-		isVarlena = isTypeVarlena(typeOid);
-	}
+	type = PG_GETARG_OID(1);
+	typeOid = DatumGetObjectId(type);
+	typeLength = getTypeLength(typeOid);
 
 	elog(DEBUG1, "@>create_constant('%s')", text_to_cstring(variableName));
 
 	if (!PG_ARGISNULL(2))
 	{
 		contentTypeOid = get_fn_expr_argtype(fcinfo->flinfo, 2);
-		if (typeOid != contentTypeOid)
+		if (typeOid == contentTypeOid)
 		{
-			ereport(ERROR,
-					(errcode(ERRCODE_INVALID_PARAMETER_VALUE), (errmsg("value must be of type %s, but is of type %s", getTypeName(typeOid) ,getTypeName(contentTypeOid) ))));
-			PG_RETURN_BOOL(false);
+			contentTypeLength = typeLength;
 		}
-		if (isVarlena)
+		else
+		{
+			contentTypeLength = getTypeLength(contentTypeOid);
+		}
+		if (contentTypeLength < 0)
 		{
 			content = (Datum) PG_GETARG_VARLENA_P(2);
 		}
@@ -742,9 +967,22 @@ Datum create_constant( PG_FUNCTION_ARGS)
 		{
 			content = PG_GETARG_DATUM(2);
 		}
+
+		/*
+		 * Make sure the new content is malloced instead of palloced, and cast to the right type of course.
+		 */
+		content = coerceInput(contentTypeOid, typeOid, typeLength, content,
+				&castFailed);
+		if (castFailed)
+		{
+			/*
+			 * Something went wrong, but that has already been logged
+			 */
+			PG_RETURN_BOOL(false);
+		}
 	}
 
-	result = saveNewVariable(variableName, true, type, isVarlena,
+	result = saveNewVariable(variableName, true, type, typeLength,
 			PG_ARGISNULL(2), content);
 
 	elog(DEBUG1, "@<create_constant('%s')", text_to_cstring(variableName));
@@ -862,12 +1100,14 @@ PG_FUNCTION_INFO_V1(alter_value);
 Datum alter_value( PG_FUNCTION_ARGS)
 {
 	char* variableName = NULL;
-	Oid contentTypeOid = NULL;
 	SessionVariable* variable;
 	bool found;
 	bool priorContentIsNull = false;
-	Datum priorContent = NULL;
-	DatumPtr newContent = NULL;
+	Datum priorContent = (Datum) NULL;
+	Datum newContent = (Datum) NULL;
+	Oid newValueTypeOid;
+	int newValueTypeLength;
+	bool castFailed;
 
 	if (PG_NARGS() != 2)
 	{
@@ -898,47 +1138,73 @@ Datum alter_value( PG_FUNCTION_ARGS)
 		;
 	}
 
-	contentTypeOid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	if (variable->type != contentTypeOid)
+	newValueTypeOid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	if (variable->type == newValueTypeOid)
 	{
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE), (errmsg("value should be of type %s, but is of type %s", getTypeName(variable->type) ,getTypeName(contentTypeOid) ))));
-		PG_RETURN_NULL()
-		;
+		newValueTypeLength = variable->typeLength;
+	}
+	else
+	{
+		newValueTypeLength = getTypeLength(newValueTypeOid);
 	}
 
 	priorContentIsNull = variable->isNull;
 	if (!priorContentIsNull)
 	{
-		if (variable->isVarlena)
+		priorContent = coerceOutput(variable->type, variable->typeLength,
+				variable->content, newValueTypeOid, &castFailed);
+		if (castFailed)
 		{
-			priorContent = (Datum) palloc(VARSIZE(variable->content));
-			memcpy((void*) priorContent, (void*) variable->content,
-					VARSIZE(variable->content));
-			free((void*) variable->content);
-		}
-		else
-		{
-			priorContent = variable->content;
+			/*
+			 * something went wrong, but that is already logged
+			 */
+			PG_RETURN_NULL()
+			;
 		}
 	}
 
-	variable->isNull = PG_ARGISNULL(1);
-
-	if (variable->isNull)
+	if (PG_ARGISNULL(1))
 	{
-		variable->content = (Datum) NULL;
-	}
-	else if (variable->isVarlena)
-	{
-		newContent = (DatumPtr) PG_GETARG_VARLENA_P(1);
-		variable->content = (Datum) malloc(VARSIZE(newContent));
-		memcpy((void*) variable->content, newContent, VARSIZE(newContent));
+		newContent = (Datum) NULL;
 	}
 	else
 	{
-		variable->content = PG_GETARG_DATUM(1);
+
+		if (newValueTypeLength < 0)
+		{
+			newContent = (Datum) PG_GETARG_VARLENA_P(1);
+		}
+		else
+		{
+			newContent = PG_GETARG_DATUM(1);
+		}
+
+		/*
+		 * Make sure the new content is malloced instead of palloced, and cast to the right type of course.
+		 */
+		newContent = coerceInput(newValueTypeOid, variable->type,
+				variable->typeLength, newContent, &castFailed);
+		if (castFailed)
+		{
+			/*
+			 * Something went wrong, but that has already been logged
+			 */
+
+			PG_RETURN_NULL()
+			;
+		}
 	}
+
+	if (!variable->isNull
+			&& (variable->typeLength < 0 || variable->typeLength > SIZEOF_DATUM))
+	{
+		/*
+		 * The prior content has been malloced instead of palloced, so must be freed here.
+		 */
+		free((void*) variable->content);
+	}
+	variable->isNull = PG_ARGISNULL(1);
+	variable->content = newContent;
 
 	updateVariable(variable);
 
@@ -959,12 +1225,14 @@ PG_FUNCTION_INFO_V1(set);
 Datum set( PG_FUNCTION_ARGS)
 {
 	char* variableName = NULL;
-	Oid contentTypeOid = NULL;
 	SessionVariable* variable;
 	bool found;
 	bool priorContentIsNull = false;
-	Datum priorContent = NULL;
-	DatumPtr newContent = NULL;
+	Datum priorContent = (Datum) NULL;
+	Datum newContent = (Datum) NULL;
+	Oid newValueTypeOid;
+	int newValueTypeLength;
+	bool castFailed;
 
 	if (PG_NARGS() != 2)
 	{
@@ -1003,46 +1271,74 @@ Datum set( PG_FUNCTION_ARGS)
 		;
 	}
 
-	contentTypeOid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	if (variable->type != contentTypeOid)
+	newValueTypeOid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	if (variable->type == newValueTypeOid)
 	{
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE), (errmsg("value must be of type %s, but is of type %s", getTypeName(variable->type) ,getTypeName(contentTypeOid) ))));
-		PG_RETURN_NULL()
-		;
+		newValueTypeLength = variable->typeLength;
+	}
+	else
+	{
+		newValueTypeLength = getTypeLength(newValueTypeOid);
 	}
 
 	priorContentIsNull = variable->isNull;
 	if (!priorContentIsNull)
 	{
-		if (variable->isVarlena)
+		priorContent = coerceOutput(variable->type, variable->typeLength,
+				variable->content, newValueTypeOid, &castFailed);
+		if (castFailed)
 		{
-			priorContent = (Datum) palloc(VARSIZE(variable->content));
-			memcpy((void*) priorContent, (void*) variable->content,
-					VARSIZE(variable->content));
-			free((void*) variable->content);
-		}
-		else
-		{
-			priorContent = variable->content;
+			/*
+			 *  something went wrong, but that is already logged
+			 */
+			PG_RETURN_NULL()
+			;
 		}
 	}
 
-	variable->isNull = PG_ARGISNULL(1);
-	if (variable->isNull)
+	if (PG_ARGISNULL(1))
 	{
-		variable->content = (Datum) NULL;
-	}
-	else if (variable->isVarlena)
-	{
-		newContent = (DatumPtr) PG_GETARG_VARLENA_P(1);
-		variable->content = (Datum) malloc(VARSIZE(newContent));
-		memcpy((void*) variable->content, newContent, VARSIZE(newContent));
+		newContent = (Datum) NULL;
 	}
 	else
 	{
-		variable->content = PG_GETARG_DATUM(1);
+
+		if (newValueTypeLength < 0)
+		{
+			newContent = (Datum) PG_GETARG_VARLENA_P(1);
+		}
+		else
+		{
+			newContent = PG_GETARG_DATUM(1);
+		}
+
+		/*
+		 * Make sure the new content is malloced instead of palloced, and cast to the right type of course.
+		 */
+		newContent = coerceInput(newValueTypeOid, variable->type,
+				variable->typeLength, newContent, &castFailed);
+		if (castFailed)
+		{
+			/*
+			 * Something went wrong, but that has already been logged
+			 */
+
+			PG_RETURN_NULL()
+			;
+		}
 	}
+
+	if (!variable->isNull
+			&& (variable->typeLength < 0 || variable->typeLength > SIZEOF_DATUM))
+	{
+		/*
+		 * The prior content has been malloced instead of palloced, so must be freed here.
+		 */
+		free((void*) variable->content);
+	}
+
+	variable->isNull = PG_ARGISNULL(1);
+	variable->content = newContent;
 
 	elog(DEBUG1, "@<set('%s')", variableName);
 
@@ -1061,10 +1357,13 @@ PG_FUNCTION_INFO_V1(get);
 Datum get( PG_FUNCTION_ARGS)
 {
 	char* variableName = NULL;
-	Datum content = NULL;
+	Datum result = (Datum) NULL;
 	SessionVariable* variable;
 	bool found;
-	Oid contentTypeOid;
+	Oid resultTypeOid;
+	bool castFailed;
+	CoercionPathType coercionPathType;
+	Oid coercionFunctionOid;
 
 	if (PG_NARGS() != 2)
 	{
@@ -1095,36 +1394,41 @@ Datum get( PG_FUNCTION_ARGS)
 		;
 	}
 
-	contentTypeOid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	if (variable->type != contentTypeOid)
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE), (errmsg("please invoke as session_variable.get('%s', null::%s)", variableName, getTypeName(variable->type) ))));
-		PG_RETURN_NULL()
-		;
-	}
-
+	resultTypeOid = get_fn_expr_argtype(fcinfo->flinfo, 1);
 	if (variable->isNull)
 	{
-		elog(DEBUG1, "@<get('%s') = NULL", variableName);
-		PG_RETURN_NULL()
-		;
+		if (resultTypeOid == variable->type)
+		{
+			coercionPathType = COERCION_PATH_RELABELTYPE;
+		}
+		else
+		{
+			coercionPathType = find_coercion_pathway(variable->type,
+					resultTypeOid, COERCION_ASSIGNMENT, &coercionFunctionOid);
+		}
+		switch (coercionPathType)
+		{
+		case COERCION_PATH_RELABELTYPE:
+		case COERCION_PATH_FUNC:
+		case COERCION_PATH_COERCEVIAIO:
+			elog(DEBUG1, "@<get('%s') = NULL", variableName);
+			PG_RETURN_NULL()
+			;
+			break;
+		default:
+			ereport(ERROR,
+					(errcode(ERRCODE_INVALID_PARAMETER_VALUE), (errmsg("The variable's internal type %s, cannot be cast to type %s", getTypeName(variable->type) ,getTypeName(resultTypeOid) ))));
+			PG_RETURN_NULL()
+			;
+		}
 	}
 
-	if (variable->isVarlena)
-	{
-		content = (Datum) palloc(VARSIZE(variable->content));
-		memcpy((void*) content, (void*) variable->content,
-				VARSIZE(variable->content));
-	}
-	else
-	{
-		content = variable->content;
-	}
+	result = coerceOutput(variable->type, variable->typeLength,
+			variable->content, resultTypeOid, &castFailed);
 
 	elog(DEBUG1, "@<get('%s')", variableName);
 
-	PG_RETURN_DATUM(content);
+	PG_RETURN_DATUM(result);
 }
 
 /*
@@ -1274,4 +1578,21 @@ Datum init( PG_FUNCTION_ARGS)
 	elog(DEBUG1, "@<init() = %d", result);
 
 	PG_RETURN_INT32(result);
+}
+
+/*
+ * function session_variable.get_session_variable_version() returns text.
+ *
+ * This function returns the current version of this database extension
+ */
+PG_FUNCTION_INFO_V1(get_session_variable_version);
+Datum get_session_variable_version( PG_FUNCTION_ARGS)
+{
+	Datum pg_versioning_version = (Datum) palloc(
+	VARHDRSZ + strlen(sessionVariableVersion));
+	SET_VARSIZE(pg_versioning_version,
+			VARHDRSZ + strlen(sessionVariableVersion));
+	memcpy(VARDATA(pg_versioning_version), sessionVariableVersion,
+			strlen(sessionVariableVersion));
+	PG_RETURN_DATUM(pg_versioning_version);
 }

@@ -18,6 +18,9 @@
 #ifndef SESSION_VARIABLE_H
 #define SESSION_VARIABLE_H
 
+
+static char* sessionVariableVersion = "1.0.1";
+
 /*
  * Loads the session variables from the session_variable.variables table
  */
@@ -36,6 +39,7 @@ extern Datum init(PG_FUNCTION_ARGS);
 extern Datum is_constant(PG_FUNCTION_ARGS);
 extern Datum set(PG_FUNCTION_ARGS);
 extern Datum type_of(PG_FUNCTION_ARGS);
+extern Datum get_session_variable_version( PG_FUNCTION_ARGS);
 
 typedef struct SessionVariable
 {
@@ -45,7 +49,7 @@ typedef struct SessionVariable
 	Oid type;
 	Datum content;
 	bool isConstant;
-	bool isVarlena;
+	int typeLength;
 	bool isNull;
 } SessionVariable;
 

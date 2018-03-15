@@ -167,7 +167,7 @@ create or replace function get
     , just_for_result_type anyelement
     )
     returns anyelement
-    as 'session_variable.so', 'get' language C security definer;
+    as 'session_variable.so', 'get' language C security definer cost 2;
 comment on function get
     ( variable_or_constant_name text
     , just_for_result_type anyelement
@@ -180,7 +180,7 @@ grant execute on function get
 
 create or replace function set(varialbe_name text, new_value anyelement)
     returns anyelement 
-    as 'session_variable.so', 'set' language C security definer;
+    as 'session_variable.so', 'set' language C security definer cost 2;
 comment on function set(varialbe_name text, new_value anyelement) is
     'Update the value of a session variable. The changed value will be visible in the curent session only';
 grant execute on function set(varialbe_name text, new_value anyelement)
@@ -188,7 +188,7 @@ grant execute on function set(varialbe_name text, new_value anyelement)
 
 create or replace function "exists"(variable_name text) 
     returns boolean
-    as 'session_variable.so', 'exists' language C security definer;
+    as 'session_variable.so', 'exists' language C security definer cost 2;
 comment on function "exists"(variable_name text) is
     'Checks if a constant or session variable with the specified name exists';
 grant execute on function "exists"(variable_name text)
@@ -196,7 +196,7 @@ grant execute on function "exists"(variable_name text)
     
 create or replace function type_of(variable_or_constant_name text)
     returns regtype
-    as 'session_variable.so', 'type_of' language C security definer;
+    as 'session_variable.so', 'type_of' language C security definer cost 2;
 comment on function type_of(variable_or_constant_name text) is
     'Returns the datatype of the value of the specified constant or session variable'; 
 grant execute on function type_of(variable_or_constant_name text)
@@ -204,7 +204,7 @@ grant execute on function type_of(variable_or_constant_name text)
     
 create or replace function is_constant(variable_or_constant_name text)
     returns boolean
-    as 'session_variable.so', 'is_constant' language C security definer;
+    as 'session_variable.so', 'is_constant' language C security definer cost 2;
 comment on function is_constant(variable_or_constant_name text) is
     'Returns true if the specified constant or variable appears to be a constant'
     ' or false if it happens to be a session variable'; 
@@ -217,6 +217,14 @@ create or replace function init()
 comment on function init() is 
     'Reloads all constants and session variables from the variables table, thus reverting all local changes';
 grant execute on function init() 
+    to session_variable_user_role;
+
+create or replace function get_session_variable_version()
+    returns varchar
+    as 'session_variable.so', 'get_session_variable_version' language C security definer cost 1;
+comment on function get_session_variable_version() is 
+    'Reurns the version of the session_variable database extension';
+grant execute on function get_session_variable_version() 
     to session_variable_user_role;
     
 revoke all on all functions in schema session_variable from public;

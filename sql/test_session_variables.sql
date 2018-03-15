@@ -21,6 +21,8 @@
 create extension session_variable;
 select session_variable.init();
 
+select session_variable.get_session_variable_version();
+
 select session_variable.get('does not exist', null::text);                                 -- fails: no variables exist
 
 select session_variable.create_variable('some_date', 'date'::regtype, '2015-07-15'::date);
@@ -32,7 +34,7 @@ select session_variable.create_variable('initially null', 'text'::regtype, null:
 select session_variable.create_variable('a_record', 'record'::regtype, ('some text', '2015-07-17'::date, 123.45::numeric));
 select session_variable.create_variable('int[][]', 'int[][]'::regtype, '{{1,2},{3,4},{5,6}}'::int[][]);
 
-select session_variable.create_variable('wrongdate', 'text'::regtype, '2015-07-15'::date); -- fails: wrong datatype
+select session_variable.create_variable('wrongdate', 'interval'::regtype, '2015-07-15'::date); -- fails: wrong datatype
 select session_variable.get('does not exist', null::text);                                 -- fails: does not exist
 
 select session_variable.type_of('some_date');
@@ -48,7 +50,7 @@ select session_variable.get('an integer', null::integer);
 select session_variable.get('just text', null::text);
 select session_variable.get('varchar', null::varchar);
 select session_variable.get('numeric const', null::numeric);
-select session_variable.get('numeric const', null::text);                                  -- fails: wrong type
+select session_variable.get('numeric const', null::date);                                  -- fails: wrong type
 select session_variable.get('int[][]', null::int[][]);
 select session_variable.get('initially null', null::text);
 select session_variable.get('a_record', null::record);
@@ -95,7 +97,7 @@ select session_variable.alter_value('numeric const', 3333333333333333333333.3333
 select session_variable.alter_value('a_record', (123, 456, 'altered text'));
 
 select session_variable.alter_value('does not exist', null::text);                         -- fails: does not exist
-select session_variable.alter_value('an integer', null::text);                             -- fails: wrong datatype
+select session_variable.alter_value('an integer', null::date);                             -- fails: wrong datatype
 
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
 select session_variable.get('an integer', null::integer);
@@ -103,6 +105,14 @@ select session_variable.get('just text', null::text);
 select session_variable.get('varchar', null::varchar);
 select session_variable.get('numeric const', null::numeric);
 select session_variable.get('a_record', null::record);
+
+select session_variable.set('an integer', 123.456::float);
+select session_variable.get('an integer', null::smallint);
+
+select session_variable.set('varchar', '2018-03-15'::date);
+select session_variable.get('varchar', null::char);
+select session_variable.set('varchar', '12345'::text);
+select session_variable.set('varchar', 23.456::numeric);                                   -- fails: the result cannot be cast from varchar to numeric
 
 select session_variable.drop('some_date');
 select session_variable.drop('an integer');
