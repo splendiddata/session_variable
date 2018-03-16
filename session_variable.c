@@ -37,7 +37,7 @@ PG_MODULE_MAGIC
 ;
 #endif
 
-static Oid pg_catalogOID;
+static Oid pg_catalogOID = InvalidOid;
 static SessionVariable* variables = NULL;
 
 int getTypeLength(Oid typeOid);
@@ -812,6 +812,11 @@ bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
  */
 void _PG_init(void)
 {
+	if (IsBackgroundWorker) {
+		elog(DEBUG1, "session_variable._PG_INIT(): exit because this is a background worker");
+		return;
+	}
+
 	pg_catalogOID = get_namespace_oid("pg_catalog", false);
 	reload();
 }
