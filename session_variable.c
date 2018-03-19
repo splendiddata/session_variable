@@ -29,8 +29,17 @@
 #include "utils/syscache.h"
 #include "utils/lsyscache.h"
 #include "parser/parse_coerce.h"
+#include "utils/array.h"
 
 #include "session_variable.h"
+
+#ifdef XLOG_INCLUDE_ORIGIN
+/*
+ * Must be Postgres version 10 or higher as backend/utils/fmgrprotos.h does not
+ * exist in an earlier release
+ */
+#define POSTGRES_10_PLUS
+#endif /* XLOG_INCLUDE_ORIGIN */
 
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC
@@ -813,6 +822,7 @@ bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
 void _PG_init(void)
 {
 	Oid sessionVariableNamespaceOid;
+	bool initFunctionExists;
 
 	if (IsBackgroundWorker)
 	{
@@ -827,20 +837,45 @@ void _PG_init(void)
 	 * If function session_variable.init() exists then invoke it via the executor so that access rights are no problem
 	 */
 	sessionVariableNamespaceOid = get_namespace_oid("session_variable", true);
-	if (OidIsValid(sessionVariableNamespaceOid) &&
-	SearchSysCacheExists3(PROCNAMEARGSNSP,
-			CStringGetDatum("init"),
-			PointerGetDatum(construct_empty_array(InvalidOid)),
-			ObjectIdGetDatum(sessionVariableNamespaceOid)))
+	if (OidIsValid(sessionVariableNamespaceOid))
 	{
-		SPI_connect();
-		SPI_execute("select session_variable.init()", true, 0);
-		SPI_finish();
-	}
-	else
-	{
-		elog(DEBUG1,
-				"session_variable._PG_INIT(): Initialization of session variables skipped because function session_variable.init() does not exist");
+
+#ifdef POSTGRES_10_PLUS
+		initFunctionExists = SearchSysCacheExists3(PROCNAMEARGSNSP,
+				CStringGetDatum("init"),
+				PointerGetDatum(construct_empty_array(InvalidOid)),
+				ObjectIdGetDatum(sessionVariableNamespaceOid));
+#else
+		{
+			Portal cursor;
+			SPI_connect();
+			cursor =
+					SPI_cursor_open_with_args(NULL,
+							"select proc.oid "
+									"from pg_catalog.pg_proc proc "
+									"join pg_catalog.pg_namespace nsp on pronamespace = nsp.oid "
+									"and nspname = 'session_variable' "
+									"and proname = 'init' and cardinality(proargtypes) = 0",
+							0,
+							NULL, NULL, NULL, true, 1);
+			SPI_cursor_fetch(cursor, true, 1);
+			initFunctionExists = !cursor->atEnd;
+			SPI_cursor_close(cursor);
+			SPI_finish();
+		}
+#endif
+
+		if (initFunctionExists)
+		{
+			SPI_connect();
+			SPI_execute("select session_variable.init()", true, 0);
+			SPI_finish();
+		}
+		else
+		{
+			elog(DEBUG1,
+					"session_variable._PG_INIT(): Initialization of session variables skipped because function session_variable.init() does not exist");
+		}
 	}
 }
 
