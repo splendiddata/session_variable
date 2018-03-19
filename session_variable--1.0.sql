@@ -217,7 +217,7 @@ create or replace function init()
 comment on function init() is 
     'Reloads all constants and session variables from the variables table, thus reverting all local changes';
 grant execute on function init() 
-    to session_variable_user_role;
+    to public;
 
 create or replace function get_session_variable_version()
     returns varchar

@@ -812,13 +812,36 @@ bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
  */
 void _PG_init(void)
 {
-	if (IsBackgroundWorker) {
-		elog(DEBUG1, "session_variable._PG_INIT(): exit because this is a background worker");
+	Oid sessionVariableNamespaceOid;
+
+	if (IsBackgroundWorker)
+	{
+		elog(DEBUG1,
+				"session_variable._PG_INIT(): exit because this is a background worker");
 		return;
 	}
 
 	pg_catalogOID = get_namespace_oid("pg_catalog", false);
-	reload();
+
+	/*
+	 * If function session_variable.init() exists then invoke it via the executor so that access rights are no problem
+	 */
+	sessionVariableNamespaceOid = get_namespace_oid("session_variable", true);
+	if (OidIsValid(sessionVariableNamespaceOid) &&
+	SearchSysCacheExists3(PROCNAMEARGSNSP,
+			CStringGetDatum("init"),
+			PointerGetDatum(construct_empty_array(InvalidOid)),
+			ObjectIdGetDatum(sessionVariableNamespaceOid)))
+	{
+		SPI_connect();
+		SPI_execute("select session_variable.init()", true, 0);
+		SPI_finish();
+	}
+	else
+	{
+		elog(DEBUG1,
+				"session_variable._PG_INIT(): Initialization of session variables skipped because function session_variable.init() does not exist");
+	}
 }
 
 /*
