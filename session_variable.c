@@ -46,7 +46,7 @@ PG_MODULE_MAGIC
 ;
 #endif
 
-static Oid pg_catalogOID = InvalidOid;
+static bool virgin = true;
 static SessionVariable* variables = NULL;
 
 int getTypeLength(Oid typeOid);
@@ -390,6 +390,14 @@ void buildBTree(void)
 int reload(void);
 /*
  * Walks through the session_variable.variables table to build the SessionVariable b-tree in variables.
+ * ----------------------------------------------------------------------------
+ * A _PG_INIT function appears not usable for this purpose because access
+ * rights on the session_variable.variables table appear to be handled
+ * differently when invoked as part of the initialisation from a preload
+ * library or when invoked in "normal" code processing. So every function that
+ * is externally accessible checks if 'virgin' is still set and if so invokes
+ * reload(). This function resets 'virgin'.
+ * ----------------------------------------------------------------------------
  *
  * @return int The number or SessionVariables created
  */
@@ -421,6 +429,7 @@ int reload()
 	 */
 	removeVariableRecursively(variables);
 	variables = NULL;
+	virgin = false;
 
 	SPI_connect();
 
@@ -516,7 +525,7 @@ int reload()
 
 	buildBTree();
 
-	elog(DEBUG1, "reload() = %d", nrVariables);
+	elog(DEBUG3, "reload() = %d", nrVariables);
 	return nrVariables;
 }
 
@@ -817,69 +826,6 @@ bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
 }
 
 /*
- * Finds the oid of the "pg_catalog" namespace
- */
-void _PG_init(void)
-{
-	Oid sessionVariableNamespaceOid;
-	bool initFunctionExists;
-
-	if (IsBackgroundWorker)
-	{
-		elog(DEBUG1,
-				"session_variable._PG_INIT(): exit because this is a background worker");
-		return;
-	}
-
-	pg_catalogOID = get_namespace_oid("pg_catalog", false);
-
-	/*
-	 * If function session_variable.init() exists then invoke it via the executor so that access rights are no problem
-	 */
-	sessionVariableNamespaceOid = get_namespace_oid("session_variable", true);
-	if (OidIsValid(sessionVariableNamespaceOid))
-	{
-
-#ifdef POSTGRES_10_PLUS
-		initFunctionExists = SearchSysCacheExists3(PROCNAMEARGSNSP,
-				CStringGetDatum("init"),
-				PointerGetDatum(construct_empty_array(InvalidOid)),
-				ObjectIdGetDatum(sessionVariableNamespaceOid));
-#else
-		{
-			Portal cursor;
-			SPI_connect();
-			cursor =
-					SPI_cursor_open_with_args(NULL,
-							"select proc.oid "
-									"from pg_catalog.pg_proc proc "
-									"join pg_catalog.pg_namespace nsp on pronamespace = nsp.oid "
-									"and nspname = 'session_variable' "
-									"and proname = 'init' and cardinality(proargtypes) = 0",
-							0,
-							NULL, NULL, NULL, true, 1);
-			SPI_cursor_fetch(cursor, true, 1);
-			initFunctionExists = !cursor->atEnd;
-			SPI_cursor_close(cursor);
-			SPI_finish();
-		}
-#endif
-
-		if (initFunctionExists)
-		{
-			SPI_connect();
-			SPI_execute("select session_variable.init()", true, 0);
-			SPI_finish();
-		}
-		else
-		{
-			elog(DEBUG1,
-					"session_variable._PG_INIT(): Initialization of session variables skipped because function session_variable.init() does not exist");
-		}
-	}
-}
-
-/*
  * create_variable(variable_name text, variable_type regtype) returns boolean
  * create_variable(variable_name text, variable_type regtype, initial_value anyelement) returns boolean
  */
@@ -896,6 +842,10 @@ Datum create_variable( PG_FUNCTION_ARGS)
 	bool result;
 	int contentTypeLength;
 	bool castFailed;
+
+	if (virgin) {
+		reload();
+	}
 
 	if (PG_NARGS() < 2 || PG_NARGS() > 3)
 	{
@@ -983,6 +933,10 @@ Datum create_constant( PG_FUNCTION_ARGS)
 	bool result;
 	bool castFailed;
 
+	if (virgin) {
+		reload();
+	}
+
 	if (PG_NARGS() != 3)
 	{
 		ereport(ERROR,
@@ -1063,6 +1017,10 @@ Datum drop( PG_FUNCTION_ARGS)
 	char* variableName;
 	SessionVariable *variable, **higherLvl, *replacement, *aboveReplacement;
 	int diff;
+
+	if (virgin) {
+		reload();
+	}
 
 	if (PG_NARGS() != 1)
 	{
@@ -1171,6 +1129,10 @@ Datum alter_value( PG_FUNCTION_ARGS)
 	Oid newValueTypeOid;
 	int newValueTypeLength;
 	bool castFailed;
+
+	if (virgin) {
+		reload();
+	}
 
 	if (PG_NARGS() != 2)
 	{
@@ -1296,6 +1258,10 @@ Datum set( PG_FUNCTION_ARGS)
 	Oid newValueTypeOid;
 	int newValueTypeLength;
 	bool castFailed;
+
+	if (virgin) {
+		reload();
+	}
 
 	if (PG_NARGS() != 2)
 	{
@@ -1428,6 +1394,10 @@ Datum get( PG_FUNCTION_ARGS)
 	CoercionPathType coercionPathType;
 	Oid coercionFunctionOid;
 
+	if (virgin) {
+		reload();
+	}
+
 	if (PG_NARGS() != 2)
 	{
 		ereport(ERROR,
@@ -1504,6 +1474,10 @@ Datum type_of( PG_FUNCTION_ARGS)
 	SessionVariable* variable;
 	bool found;
 
+	if (virgin) {
+		reload();
+	}
+
 	if (PG_NARGS() != 1)
 	{
 		ereport(ERROR,
@@ -1547,6 +1521,10 @@ Datum exists( PG_FUNCTION_ARGS)
 	bool found;
 	char* variableName;
 
+	if (virgin) {
+		reload();
+	}
+
 	if (PG_NARGS() != 1)
 	{
 		ereport(ERROR,
@@ -1583,6 +1561,10 @@ Datum is_constant( PG_FUNCTION_ARGS)
 	char* variableName;
 	SessionVariable* variable;
 	bool found;
+
+	if (virgin) {
+		reload();
+	}
 
 	if (PG_NARGS() != 1)
 	{
@@ -1651,7 +1633,13 @@ Datum init( PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(get_session_variable_version);
 Datum get_session_variable_version( PG_FUNCTION_ARGS)
 {
-	Datum pg_versioning_version = (Datum) palloc(
+	Datum pg_versioning_version;
+
+	if (virgin) {
+		reload();
+	}
+
+	pg_versioning_version = (Datum) palloc(
 	VARHDRSZ + strlen(sessionVariableVersion));
 	SET_VARSIZE(pg_versioning_version,
 			VARHDRSZ + strlen(sessionVariableVersion));
