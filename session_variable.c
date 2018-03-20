@@ -479,13 +479,17 @@ int reload()
 				 * So the size of the content must match the content size of the wrapping bytea (= VARSIZE - VARHDRSZ).
 				 * If this is not the case, someone has manually altered the content.
 				 */
-				elog(ERROR, "Someone has been messing around with variable %s",
-						DatumGetPointer(variableName));
+				char* varname = palloc0(VARSIZE(variableName) + 1);
+				strncpy(varname, VARDATA(variableName), VARSIZE(variableName));
+				elog(LOG, "Someone has been messing around with variable '%s'",
+						varname);
+				elog(NOTICE,
+						"Session variable '%s' is incorrectly stored in the session_variable.variables table",
+						varname);
+				pfree(varname);
 
-				removeVariableRecursively(variables);
-				SPI_cursor_close(cursor);
-				SPI_finish();
-				return 0;
+				SPI_cursor_fetch(cursor, true, 1);
+				continue;
 			}
 #ifdef USE_FLOAT8_BYVAL
 			if (typeLength > 0)
@@ -843,7 +847,8 @@ Datum create_variable( PG_FUNCTION_ARGS)
 	int contentTypeLength;
 	bool castFailed;
 
-	if (virgin) {
+	if (virgin)
+	{
 		reload();
 	}
 
@@ -933,7 +938,8 @@ Datum create_constant( PG_FUNCTION_ARGS)
 	bool result;
 	bool castFailed;
 
-	if (virgin) {
+	if (virgin)
+	{
 		reload();
 	}
 
@@ -1018,7 +1024,8 @@ Datum drop( PG_FUNCTION_ARGS)
 	SessionVariable *variable, **higherLvl, *replacement, *aboveReplacement;
 	int diff;
 
-	if (virgin) {
+	if (virgin)
+	{
 		reload();
 	}
 
@@ -1130,7 +1137,8 @@ Datum alter_value( PG_FUNCTION_ARGS)
 	int newValueTypeLength;
 	bool castFailed;
 
-	if (virgin) {
+	if (virgin)
+	{
 		reload();
 	}
 
@@ -1259,7 +1267,8 @@ Datum set( PG_FUNCTION_ARGS)
 	int newValueTypeLength;
 	bool castFailed;
 
-	if (virgin) {
+	if (virgin)
+	{
 		reload();
 	}
 
@@ -1394,7 +1403,8 @@ Datum get( PG_FUNCTION_ARGS)
 	CoercionPathType coercionPathType;
 	Oid coercionFunctionOid;
 
-	if (virgin) {
+	if (virgin)
+	{
 		reload();
 	}
 
@@ -1474,7 +1484,8 @@ Datum type_of( PG_FUNCTION_ARGS)
 	SessionVariable* variable;
 	bool found;
 
-	if (virgin) {
+	if (virgin)
+	{
 		reload();
 	}
 
@@ -1521,7 +1532,8 @@ Datum exists( PG_FUNCTION_ARGS)
 	bool found;
 	char* variableName;
 
-	if (virgin) {
+	if (virgin)
+	{
 		reload();
 	}
 
@@ -1562,7 +1574,8 @@ Datum is_constant( PG_FUNCTION_ARGS)
 	SessionVariable* variable;
 	bool found;
 
-	if (virgin) {
+	if (virgin)
+	{
 		reload();
 	}
 
@@ -1635,7 +1648,8 @@ Datum get_session_variable_version( PG_FUNCTION_ARGS)
 {
 	Datum pg_versioning_version;
 
-	if (virgin) {
+	if (virgin)
+	{
 		reload();
 	}
 
