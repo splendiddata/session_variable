@@ -282,7 +282,7 @@ void removeVariableRecursively(SessionVariable* v)
 	 * The variable is created with malloc() instead of palloc(), so must be
 	 * freed using free() here instead of pfree().
 	 */
-	if (v->typeLength < 0 || v->typeLength > sizeof(void *))
+	if (v->typeLength < 0 || v->typeLength > SIZEOF_DATUM)
 	{
 		free((void*) v->content);
 	}
@@ -431,6 +431,8 @@ int reload()
 	variables = NULL;
 	virgin = false;
 
+	elog(DEBUG2, "execute query: %s", sql);
+
 	SPI_connect();
 
 	/*
@@ -451,6 +453,7 @@ int reload()
 		typeLength = getTypeLength(valueType);
 		value = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 4,
 				&isNull);
+
 		if (isNull)
 		{
 			value = (Datum) NULL;
@@ -481,8 +484,11 @@ int reload()
 				 */
 				char* varname = palloc0(VARSIZE(variableName) + 1);
 				strncpy(varname, VARDATA(variableName), VARSIZE(variableName));
-				elog(LOG, "Someone has been messing around with variable '%s'",
-						varname);
+				elog(LOG,
+						"Someone has been messing with variable '%s, expected length=%d, actual length = %d'",
+						varname,
+						typeLength < 0 ? VARSIZE(value) : typeLength <= SIZEOF_DATUM ? SIZEOF_DATUM : typeLength,
+						VARSIZE(valueByteArray) - VARHDRSZ);
 				elog(NOTICE,
 						"Session variable '%s' is incorrectly stored in the session_variable.variables table",
 						varname);
