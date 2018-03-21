@@ -33,14 +33,6 @@
 
 #include "session_variable.h"
 
-#ifdef XLOG_INCLUDE_ORIGIN
-/*
- * Must be Postgres version 10 or higher as backend/utils/fmgrprotos.h does not
- * exist in an earlier release
- */
-#define POSTGRES_10_PLUS
-#endif /* XLOG_INCLUDE_ORIGIN */
-
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC
 ;
@@ -51,7 +43,7 @@ static SessionVariable* variables = NULL;
 
 int getTypeLength(Oid typeOid);
 /*
- * Finds the type length in the type cache. -1 for varlena, otherwise 1,2,4 or 8
+ * Finds the type length in the type cache. -1 for varlena
  *
  * @param Oid typeOid - Identification of the type
  * @return int typlen from pg_type
@@ -141,19 +133,17 @@ Datum coerceInput(Oid inputType, Oid internalType, int internalTypeLength,
 
 	if (internalTypeLength < 0)
 	{
-		mallocedResult = (Datum) malloc( VARHDRSZ + VARSIZE(coercedInput));
+		mallocedResult = (Datum) malloc( VARSIZE(coercedInput));
 		SET_VARSIZE(mallocedResult, VARSIZE(coercedInput));
 		memcpy(VARDATA(mallocedResult), VARDATA(coercedInput),
-				VARSIZE(coercedInput));
+				VARSIZE(coercedInput) - VARHDRSZ);
 	}
-#ifndef USE_FLOAT8_BYVAL
 	else if (internalTypeLength > SIZEOF_DATUM)
 	{
 		mallocedResult = (Datum) malloc(internalTypeLength);
 		memcpy((void*) mallocedResult, (void*) coercedInput,
 				internalTypeLength);
 	}
-#endif
 	else
 	{
 		mallocedResult = coercedInput;
@@ -205,19 +195,17 @@ Datum coerceOutput(Oid internalType, int internalTypeLength, Datum internalData,
 	case COERCION_PATH_RELABELTYPE:
 		if (internalTypeLength < 0)
 		{
-			result = (Datum) palloc(VARHDRSZ + VARSIZE(internalData));
+			result = (Datum) palloc(VARSIZE(internalData));
 			SET_VARSIZE(result, VARSIZE(internalData));
 			memcpy(VARDATA(result), VARDATA(internalData),
-					VARSIZE(internalData));
+					VARSIZE(internalData) - VARHDRSZ);
 
 		}
-#ifndef USE_FLOAT8_BYVAL
 		else if (internalTypeLength > SIZEOF_DATUM)
 		{
 			result = (Datum) palloc(internalTypeLength);
 			memcpy((void*) result, &internalData, internalTypeLength);
 		}
-#endif
 		else
 		{
 			result = internalData;
@@ -312,7 +300,7 @@ SessionVariable* createVariable(text* variableName, bool isConst, Oid valueType,
 			sizeof(SessionVariable));
 
 	elog(DEBUG3,
-			"createVariable(%s, isConst=%d, valueType=%d, isVarlena=%d, isNull=%d, value)",
+			"createVariable(%s, isConst=%d, valueType=%d, typeLength=%d, isNull=%d, value)",
 			text_to_cstring(variableName), isConst, valueType, typeLength,
 			isNull);
 
@@ -464,17 +452,11 @@ int reload()
 			value = (Datum) VARDATA(valueByteArray);
 			if ((typeLength < 0
 					&& VARSIZE(valueByteArray) - VARHDRSZ != VARSIZE(value))
-#ifdef USE_FLOAT8_BYVAL
-					|| (typeLength > 0
-							&& VARSIZE(valueByteArray) - VARHDRSZ
-									!= SIZEOF_DATUM)
-#else
 					|| (typeLength > 0 && typeLength <= SIZEOF_DATUM
 							&& VARSIZE(valueByteArray) - VARHDRSZ
 							!= SIZEOF_DATUM)
 					|| (typeLength > SIZEOF_DATUM
 							&& VARSIZE(valueByteArray) - VARHDRSZ != typeLength)
-#endif
 					)
 			{
 				/*
@@ -483,12 +465,12 @@ int reload()
 				 * If this is not the case, someone has manually altered the content.
 				 */
 				char* varname = palloc0(VARSIZE(variableName) + 1);
-				strncpy(varname, VARDATA(variableName), VARSIZE(variableName));
+				strncpy(varname, VARDATA(variableName), VARSIZE(variableName) - VARHDRSZ);
 				elog(LOG,
-						"Someone has been messing with variable '%s, expected length=%d, actual length = %d'",
+						"Someone has been messing with variable '%s', expected length=%d, actual length = %d, SIZEOF_DATUM = %d",
 						varname,
-						typeLength < 0 ? VARSIZE(value) : typeLength <= SIZEOF_DATUM ? SIZEOF_DATUM : typeLength,
-						VARSIZE(valueByteArray) - VARHDRSZ);
+						typeLength < 0 ? VARSIZE(value) : typeLength,
+						VARSIZE(valueByteArray) - VARHDRSZ, SIZEOF_DATUM);
 				elog(NOTICE,
 						"Session variable '%s' is incorrectly stored in the session_variable.variables table",
 						varname);
@@ -497,21 +479,12 @@ int reload()
 				SPI_cursor_fetch(cursor, true, 1);
 				continue;
 			}
-#ifdef USE_FLOAT8_BYVAL
-			if (typeLength > 0)
-			{
-				Datum tmp;
-				memcpy(&tmp, (void*) value, SIZEOF_DATUM);
-				value = tmp;
-			}
-#else
 			if (typeLength > 0 && typeLength <= SIZEOF_DATUM)
 			{
 				Datum tmp;
 				memcpy(&tmp, (void*) value, SIZEOF_DATUM);
 				value = tmp;
 			}
-#endif
 			/*
 			 * we want the value to be malloced instead of palloced.
 			 */
@@ -595,15 +568,13 @@ bool insertVariable(SessionVariable* variable)
 			memcpy(VARDATA(contentWrapper), (void*) variable->content,
 					VARSIZE(variable->content));
 		}
-#ifndef USE_FLOAT8_BYVAL
 		else if (variable->typeLength > SIZEOF_DATUM)
 		{
 			contentWrapper = (Datum) palloc(VARHDRSZ + variable->typeLength);
-			SETVARSIZE(contentWrapper, VARHDRSZ + variable->typeLength);
+			SET_VARSIZE(contentWrapper, VARHDRSZ + variable->typeLength);
 			memcpy(VARDATA(contentWrapper), (void*) variable->content,
 					variable->typeLength);
 		}
-#endif
 		else
 		{
 			contentWrapper = (Datum) palloc(VARHDRSZ + SIZEOF_DATUM);
@@ -655,15 +626,13 @@ void updateVariable(SessionVariable* variable)
 			memcpy(VARDATA(contentWrapper), (void*) variable->content,
 					VARSIZE(variable->content));
 		}
-#ifndef USE_FLOAT8_BYVAL
 		else if (variable->typeLength > SIZEOF_DATUM)
 		{
 			contentWrapper = (Datum) palloc(VARHDRSZ + variable->typeLength);
-			SETVARSIZE(contentWrapper, VARHDRSZ + variable->typeLength);
+			SET_VARSIZE(contentWrapper, VARHDRSZ + variable->typeLength);
 			memcpy(VARDATA(contentWrapper), (void*) variable->content,
 					variable->typeLength);
 		}
-#endif
 		else
 		{
 			contentWrapper = (Datum) palloc(VARHDRSZ + SIZEOF_DATUM);
@@ -800,12 +769,10 @@ bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
 			 */
 			free((void*) value);
 		}
-#ifndef USE_FLOAT8_BYVAL
 		if (value && typeLength > SIZEOF_DATUM)
 		{
 			free((void*) value);
 		}
-#endif
 		ereport(ERROR,
 				(errcode(ERRCODE_UNIQUE_VIOLATION) , (errmsg("Variable \"%s\" already exists", varName ))));
 		return false;
