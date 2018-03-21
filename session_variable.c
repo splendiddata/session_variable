@@ -53,7 +53,7 @@ int getTypeLength(Oid typeOid)
 
 	HeapTuple typTup;
 	Form_pg_type typ;
-	bool result;
+	int result;
 
 	typTup = SearchSysCache1(TYPEOID, ObjectIdGetDatum(typeOid));
 	if (!HeapTupleIsValid(typTup))
@@ -464,13 +464,13 @@ int reload()
 				 * So the size of the content must match the content size of the wrapping bytea (= VARSIZE - VARHDRSZ).
 				 * If this is not the case, someone has manually altered the content.
 				 */
-				char* varname = palloc0(VARSIZE(variableName) + 1);
+				char* varname = palloc0(VARSIZE(variableName) - VARHDRSZ + 1);
 				strncpy(varname, VARDATA(variableName), VARSIZE(variableName) - VARHDRSZ);
 				elog(LOG,
-						"Someone has been messing with variable '%s', expected length=%d, actual length = %d, SIZEOF_DATUM = %d",
+						"Someone has been messing with variable '%s', expected length=%d, actual length = %d",
 						varname,
-						typeLength < 0 ? VARSIZE(value) : typeLength,
-						VARSIZE(valueByteArray) - VARHDRSZ, SIZEOF_DATUM);
+						typeLength < 0 ? VARSIZE(value) : typeLength < SIZEOF_DATUM ? SIZEOF_DATUM : typeLength,
+						VARSIZE(valueByteArray) - VARHDRSZ);
 				elog(NOTICE,
 						"Session variable '%s' is incorrectly stored in the session_variable.variables table",
 						varname);
