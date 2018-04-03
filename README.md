@@ -2,7 +2,7 @@
 The session_variable Postgres database extension provides a way to create and
 maintain session scoped variables and constants. This extension can be part of
 a solution to mimic Oracle's global constants and variables.
-##Introduction 
+<h2>Introduction</h2> 
 The session_variable extension registers variables and constants. But internally
 they are intermixed and treated as the same. There is just a boolean that
 indicates whether or not the session_variable.set(variable_name, value) can be
@@ -42,7 +42,7 @@ session_variable.drop(variable_or_constant_name) administrator function. And
 here again existing sessions will not notice any change unless they invoke the
 session_variable.init() function.
 
-####Example:
+<h3>Example:</h3>
 
 ```
 -- First create a variable
@@ -69,10 +69,10 @@ $$ language plpgsql;
 select session_variable.drop('my_variable');
 ```
 
-##Postgres versions
+<h2>Postgres versions</h2>
 The session_variable database extension has been tested on Postgres versions
 9.5, 9.6 and 10.
-##Installation
+<h2>Installation</h2>
 Install as a normal Posrgres database extension:
  - Make sure pg_config points to the right places
  - execute make
@@ -80,7 +80,7 @@ Install as a normal Posrgres database extension:
 and then in the Postgres database execute:
  - create extension session_variable;
  
-##Functions
+<h2>Functions<h2>
 
 <h3>session_variable.create_variable(variable_name, variable_type)</h3>
 The create_variable function creates a new variable with initial value null.
@@ -781,7 +781,7 @@ session_variable.init() function.
     <code>select session_variable.get_session_variable_version();</code>
   </p>
 
-##Security
+<h2>Security</h2>
 Usage of session\_variable.create\_variable(variable\_name, variable\_type),
 session\_variable.create\_variable(variable\_name, variable\_type, initial\_value),
 session\_variable.create\_constant(constant\_name, constant\_type, value),
