@@ -6,60 +6,60 @@
 <meta charset="UTF-8">
 </head>
 <body>
-  <h1>The session_variable database extension</h1>
-  <p>The session_variable extension provides a way to create and maintain
-    session scoped variables and constants. This extension could be used as an 
-    alternative for Oracle's global constants and variables.</p>
-  <p>
-    The session_variable extension registers variables and constants. But
-    internally they are intermixed and treated as the same. There is just a
-    boolean that indicates whether or not the <a href="#set">session_variable.set(varialbe_name,
-      value)</a> can be invoked. So variable names and constant names must be unique
-    within both types. For the remaining text where variables are mentioned,
-    constants are meant as well.
-  </p>
-  <p>
-    Variables (and constants) are defined (created) on the database level. Each
-    user session will get a local copy of all defined variables on first
-    invocation of any of the session_variable functions. Invocations of <a
-      href="#set">session_variable.set(varialbe_name, value)</a> will ONLY alter
-    the content of the session local copy of the variable. Other sessions will
-    not be affected in any way - they have their own copy at their disposal.
-  </p>
-  <p>
-    The <a href="#init">session_variable.init()</a> function reloads all defined
-    variables from the session_variable.variables table. This function will be
-    invoked when a session starts, and can be invoked at any time. All variables
-    will be reverted to their initial state.
-  </p>
-  <p>
-    Variables can be defined using the <a href="#create_variable_2">session_variable.create_variable(variable_name,
-      variable_type)</a>, <a href="#create_variable_3">session_variable.create_variable(variable_name,
-      variable_type, initial_value)</a> or <a href="#create_constant">session_variable.create_constant(constant_name,
-      constant_type, value)</a> administrator functions. The initial value can be
-    null - even the value of a constant (the profit of this is disputable).
-  </p>
-  <p>
-    The initial value or the constant value can be altered using the <a
-      href="#alter_value">session_variable.alter_value(variable_or_constant_name,
-      value)</a> administrator function. The administrator who invokes the
-    alter_value() function will see the altered value immediately, but all
-    existing sessions will remain working with the old value or the value that
-    they set themselves. Any new session will see the altered value. Invocation
-    of the <a href="#init">session_variable.init()</a> function will make the
-    altered value available on the session in which it is invoked.
-  </p>
-  <p>
-    A variable can be removed using the <a href="#drop">session_variable.drop(variable_or_constant_name)</a>
-    administrator function. And here again existing sessions will not notice any
-    change unless they invoke the <a href="#init">session_variable.init()</a>
-    function.
-  </p>
-  Example:
-  <br>
-  <table class="arguments">
-    <tr>
-      <td><pre>
+	<h1>The session_variable database extension</h1>
+	<p>The session_variable extension provides a way to create and maintain
+		session scoped variables and constants. This extension could be used as an
+		alternative for Oracle's global constants and variables.</p>
+	<p>
+		The session_variable extension registers variables and constants. But
+		internally they are intermixed and treated as the same. There is just a
+		boolean that indicates whether or not the <a href="#set">session_variable.set(variable_name,
+			value)</a> can be invoked. So variable names and constant names must be unique
+		within both types. For the remaining text where variables are mentioned,
+		constants are meant as well.
+	</p>
+	<p>
+		Variables (and constants) are defined (created) on the database level. Each
+		user session will get a local copy of all defined variables on first
+		invocation of any of the session_variable functions. Invocations of <a
+			href="#set">session_variable.set(variable_name, value)</a> will ONLY alter
+		the content of the session local copy of the variable. Other sessions will not
+		be affected in any way - they have their own copy at their disposal.
+	</p>
+	<p>
+		The <a href="#init">session_variable.init()</a> function reloads all defined
+		variables from the session_variable.variables table. This function will be
+		invoked when a session starts, and can be invoked at any time. All variables
+		will be reverted to their initial state.
+	</p>
+	<p>
+		Variables can be defined using the <a href="#create_variable_2">session_variable.create_variable(variable_name,
+			variable_type)</a>, <a href="#create_variable_3">session_variable.create_variable(variable_name,
+			variable_type, initial_value)</a> or <a href="#create_constant">session_variable.create_constant(constant_name,
+			constant_type, value)</a> administrator functions. The initial value can be null
+		- even the value of a constant (the profit of this is disputable).
+	</p>
+	<p>
+		The initial value or the constant value can be altered using the <a
+			href="#alter_value">session_variable.alter_value(variable_or_constant_name,
+			value)</a> administrator function. The administrator who invokes the
+		alter_value() function will see the altered value immediately, but all
+		existing sessions will remain working with the old value or the value that
+		they set themselves. Any new session will see the altered value. Invocation of
+		the <a href="#init">session_variable.init()</a> function will make the altered
+		value available on the session in which it is invoked.
+	</p>
+	<p>
+		A variable can be removed using the <a href="#drop">session_variable.drop(variable_or_constant_name)</a>
+		administrator function. And here again existing sessions will not notice any
+		change unless they invoke the <a href="#init">session_variable.init()</a>
+		function.
+	</p>
+	Example:
+	<br>
+	<table class="arguments">
+		<tr>
+			<td><pre>
   -- First create a variable
   select session_variable.create_variable('my_variable', 'text'::regtype, 'initial text'::text);    
 
@@ -82,698 +82,727 @@
 
   -- cleanup
   select session_variable.drop('my_variable');</pre></td>
-    </tr>
-  </table>
-  <h2>Functions</h2>
+		</tr>
+	</table>
+	<h2>Functions</h2>
 
-  <h3>
-    <a name="create_variable_2" />session_variable.create_variable(variable_name,
-    variable_type)
-  </h3>
-  <p>The create_variable function creates a new variable with initial value
-    null.</p>
-  <p>The created variable will be available in the current session and in
-    sessions that are created after the committed invocation of
-    session_variable.create_variable(variable_name, variable_type). Existing
-    sessions do not see the altered situation unless they invoke the
-    session_variable.init() function.</p>
-  <table class="arguments">
-    <tr>
-      <th class="arguments" colspan="3">Arguments</th>
-    </tr>
-    <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">variable_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable to be created</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">variable_type</td>
-      <td class="arguments argtype">regtype</td>
-      <td class="arguments argdesc">The datatype that can be stored in the
-        variable</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Returns</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">boolean</td>
-      <td class="arguments argdesc">true if ok</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_name must be filled</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable type must be filled</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">23505</td>
-      <td class="arguments argdesc">Variable "<i>&lt;variable_name&gt;</i>"
-        already exists
-      </td>
-    </tr>
-  </table>
-  <p>
-    Example:<br>
-    <code>select session_variable.create_variable('my_variable',
-      'text'::regtype);</code>
-  </p>
+	<h3>
+		<a name="create_variable_2" />session_variable.create_variable(variable_name,
+		variable_type)
+	</h3>
+	<p>The create_variable function creates a new variable with initial value
+		null.</p>
+	<p>The created variable will be available in the current session and in
+		sessions that are created after the committed invocation of
+		session_variable.create_variable(variable_name, variable_type). Existing
+		sessions do not see the altered situation unless they invoke the
+		session_variable.init() function.</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">Arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">variable_name</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">Name of the variable to be created</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">variable_type</td>
+			<td class="arguments argtype">regtype</td>
+			<td class="arguments argdesc">The datatype that can be stored in the
+				variable</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">boolean</td>
+			<td class="arguments argdesc">true if ok</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable_name must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable type must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">23505</td>
+			<td class="arguments argdesc">Variable "<i>&lt;variable_name&gt;</i>"
+				already exists
+			</td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.create_variable('my_variable',
+			'text'::regtype);</code>
+	</p>
 
-  <h3>
-    <a name="create_variable_3" />session_variable.create_variable(variable_name,
-    variable_type, initial_value)
-  </h3>
-  <p>The create_variable function creates a new variable with the specified
-    initial value.</p>
-  <p>The created variable will be available in the current session and in
-    sessions that are created after the committed invocation of
-    session_variable.create_variable(variable_name, variable_type,
-    initial_value). Existing sessions do not see the altered situation unless
-    they invoke the session_variable.init() function.</p>
-  <table class="arguments">
-    <tr>
-      <th class="arguments" colspan="3">Arguments</th>
-    </tr>
-    <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">variable_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable to be created</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">variable_type</td>
-      <td class="arguments argtype">regtype</td>
-      <td class="arguments argdesc">The datatype that can be stored in the
-        variable</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">initial_value</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The initial value that will be loaded
-        on session start and to which the variable will be reverted when the
-        session_variable.init() function is invoked. <br> <br> The
-        value must have the type specified by variable_type.
-      </td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Returns</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">boolean</td>
-      <td class="arguments argdesc">true if ok</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_name must be filled</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable type must be filled</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22023</td>
-      <td class="arguments argdesc">value must be of type <i>&lt;variable_type&gt;</i>,
-        but is of type <i>&lt;the actual type&gt;</i></td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">23505</td>
-      <td class="arguments argdesc">Variable "<i>&lt;variable_name&gt;</i>"
-        already exists
-      </td>
-    </tr>
-  </table>
-  <p>
-    Example:<br>
-    <code>select session_variable.create_variable('my_date_variable',
-      'date'::regtype, '2015-07-16'::date);</code>
-  </p>
+	<h3>
+		<a name="create_variable_3" />session_variable.create_variable(variable_name,
+		variable_type, initial_value)
+	</h3>
+	<p>The create_variable function creates a new variable with the specified
+		initial value.</p>
+	<p>The created variable will be available in the current session and in
+		sessions that are created after the committed invocation of
+		session_variable.create_variable(variable_name, variable_type, initial_value).
+		Existing sessions do not see the altered situation unless they invoke the
+		session_variable.init() function.</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">Arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">variable_name</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">Name of the variable to be created</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">variable_type</td>
+			<td class="arguments argtype">regtype</td>
+			<td class="arguments argdesc">The datatype that can be stored in the
+				variable</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">initial_value</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">The initial value that will be loaded on
+				session start and to which the variable will be reverted when the
+				session_variable.init() function is invoked. <br> <br> The value
+				must have the type specified by variable_type.
+			</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">boolean</td>
+			<td class="arguments argdesc">true if ok</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable_name must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable type must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22023</td>
+			<td class="arguments argdesc">value must be of type <i>&lt;variable_type&gt;</i>,
+				but is of type <i>&lt;the actual type&gt;</i></td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">23505</td>
+			<td class="arguments argdesc">Variable "<i>&lt;variable_name&gt;</i>"
+				already exists
+			</td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.create_variable('my_date_variable',
+			'date'::regtype, '2015-07-16'::date);</code>
+	</p>
 
-  <h3>
-    <a name="create_constant" />session_variable.create_constant(constant_name,
-    constant_type, value)
-  </h3>
-  <p>The create_constant function creates a new constant with the specified
-    value.</p>
-  <p>A constant is just a variable, but it's content cannot be changed by a
-    set(variable_name, value) function invocation.</p>
-  <p>The created constant will be available in the current session and in
-    sessions that are created after the committed invocation of
-    session_variable.create_constant(constant_name, constant_type, value).
-    Existing sessions do not see the altered situation unless they invoke the
-    session_variable.init() function.</p>
-  <table class="arguments">
-    <tr>
-      <th class="arguments" colspan="3">Arguments</th>
-    </tr>
-    <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the constant to be created</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">constant_type</td>
-      <td class="arguments argtype">regtype</td>
-      <td class="arguments argdesc">The datatype that will be stored in
-        this constant</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">value</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The value that will be loaded on
-        session start or inocation of the session_variable.init() function. <br>
-        <br> The value must have the type specified by constant_type.
-      </td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Returns</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">boolean</td>
-      <td class="arguments argdesc">true if ok</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">constant_name must be filled</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">constant_type must be filled</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22023</td>
-      <td class="arguments argdesc">value must be of type <i>&lt;constant_type&gt;</i>,
-        but is of type <i>&lt;the actual type&gt;</i></td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">23505</td>
-      <td class="arguments argdesc">Variable "<i>&lt;variable_name&gt;</i>"
-        already exists
-      </td>
-    </tr>
-  </table>
-  <p>
-    Example:<br>
-    <code>select
-      session_variable.create_constant('my_environment_constant',
-      'text'::regtype, 'Production'::text);</code>
-  </p>
+	<h3>
+		<a name="create_constant" />session_variable.create_constant(constant_name,
+		constant_type, value)
+	</h3>
+	<p>The create_constant function creates a new constant with the specified
+		value.</p>
+	<p>A constant is just a variable, but it's content cannot be changed by a
+		set(variable_name, value) function invocation.</p>
+	<p>The created constant will be available in the current session and in
+		sessions that are created after the committed invocation of
+		session_variable.create_constant(constant_name, constant_type, value).
+		Existing sessions do not see the altered situation unless they invoke the
+		session_variable.init() function.</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">Arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">constant_name</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">Name of the constant to be created</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">constant_type</td>
+			<td class="arguments argtype">regtype</td>
+			<td class="arguments argdesc">The datatype that will be stored in this
+				constant</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">value</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">The value that will be loaded on session
+				start or inocation of the session_variable.init() function. <br> <br>
+				The value must have the type specified by constant_type.
+			</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">boolean</td>
+			<td class="arguments argdesc">true if ok</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">constant_name must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">constant_type must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22023</td>
+			<td class="arguments argdesc">value must be of type <i>&lt;constant_type&gt;</i>,
+				but is of type <i>&lt;the actual type&gt;</i></td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">23505</td>
+			<td class="arguments argdesc">Variable "<i>&lt;variable_name&gt;</i>"
+				already exists
+			</td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select
+			session_variable.create_constant('my_environment_constant', 'text'::regtype,
+			'Production'::text);</code>
+	</p>
 
-  <h3>
-    <a name="alter_value" />session_variable.alter_value(variable_or_constant_name,
-    value)
-  </h3>
-  <p>Alters the value of the contstant or the initial value of the variable.</p>
-  <p>The altered value will be available in the current session and in
-    sessions that are created after the committed invocation of
-    session_variable.alter_value(variable_or_constant_name, value). Existing
-    sessions do not see the altered situation unless they invoke the
-    session_variable.init() function.</p>
-  <table class="arguments">
-    <tr>
-      <th class="arguments" colspan="3">Arguments</th>
-    </tr>
-    <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">variable_or_constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable or constant of
-        which the value is to be changed</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">value</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The value new (initial) value for the
-        specified variable or constant <br> <br> The value must have
-        the type that was specified when the variable or constant was created.
-      </td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Returns</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The old value of the constant or
-        variable</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
-        does not exist
-      </td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_or_constant_name must be
-        filled</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22023</td>
-      <td class="arguments argdesc">value must be of type <i>&lt;type&gt;</i>,
-        but is of type <i>&lt;the actual type&gt;</i></td>
-    </tr>
-  </table>
-  <p>
-    Example:<br>
-    <code>select session_variable.alter_value('my_environment_constant',
-      'Development'::text);</code>
-  </p>
+	<h3>
+		<a name="alter_value" />session_variable.alter_value(variable_or_constant_name,
+		value)
+	</h3>
+	<p>Alters the value of the contstant or the initial value of the variable.</p>
+	<p>The altered value will be available in the current session and in
+		sessions that are created after the committed invocation of
+		session_variable.alter_value(variable_or_constant_name, value). Existing
+		sessions do not see the altered situation unless they invoke the
+		session_variable.init() function.</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">Arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">variable_or_constant_name</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">Name of the variable or constant of which
+				the value is to be changed</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">value</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">The value new (initial) value for the
+				specified variable or constant <br> <br> The value must have the
+				type that was specified when the variable or constant was created.
+			</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">The old value of the constant or variable</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">02000</td>
+			<td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+				does not exist
+			</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable_or_constant_name must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22023</td>
+			<td class="arguments argdesc">value must be of type <i>&lt;type&gt;</i>,
+				but is of type <i>&lt;the actual type&gt;</i></td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.alter_value('my_environment_constant',
+			'Development'::text);</code>
+	</p>
 
-  <h3>
-    <a name="drop">session_variable.drop(variable_or_constant_name)</a>
-  </h3>
-  <p>Removes the specified constant or variable.</p>
-  <p>The constant or variable will be available any more in the current
-    session and in sessions that are created after the committed invocation of
-    session_variable.drop(variable_or_constant_name). Existing sessions do not
-    see the altered situation unless they invoke the session_variable.init()
-    function.</p>
-  <table class="arguments">
-    <tr>
-      <th class="arguments" colspan="3">arguments</th>
-    </tr>
-    <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">variable_or_constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the varialbe or constant to be
-        removed</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Returns</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">boolean</td>
-      <td class="arguments argdesc">true if ok</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
-        does not exist
-      </td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_or_constant_name must be
-        filled</td>
-    </tr>
-  </table>
-  <p>
-    Example:<br>
-    <code>select session_variable.drop('my_environment_constant');</code>
-  </p>
+	<h3>
+		<a name="drop">session_variable.drop(variable_or_constant_name)</a>
+	</h3>
+	<p>Removes the specified constant or variable.</p>
+	<p>The constant or variable will be available any more in the current
+		session and in sessions that are created after the committed invocation of
+		session_variable.drop(variable_or_constant_name). Existing sessions do not see
+		the altered situation unless they invoke the session_variable.init() function.</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">variable_or_constant_name</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">Name of the variable or constant to be
+				removed</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">boolean</td>
+			<td class="arguments argdesc">true if ok</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">02000</td>
+			<td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+				does not exist
+			</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable_or_constant_name must be filled</td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.drop('my_environment_constant');</code>
+	</p>
 
-  <h3>
-    <a name="init">session_variable.init()</a>
-  </h3>
-  <p>Reloads all variables and constants in the current session</p>
-  <p>All variables that have been changed using
-    session_variable.set(variable_name, value) invocations will be undone. The
-    effect is visible in the current session only. All other sessions are left
-    untouched.</p>
-  <table class="arguments">
-    <tr>
-      <th class="arguments" colspan="3">No arguments</th>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Returns</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">integer</td>
-      <td class="arguments argdesc">the number of variabes and constants
-        that are loaded</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">No exceptions</th>
-    </tr>
-  </table>
-  <p>
-    Example:<br>
-    <code>select session_variable.init();</code>
-  </p>
+	<h3>
+		<a name="init">session_variable.init()</a>
+	</h3>
+	<p>Reloads all variables and constants in the current session</p>
+	<p>All variables that have been changed using
+		session_variable.set(variable_name, value) invocations will be undone. The
+		effect is visible in the current session only. All other sessions are left
+		untouched.</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">No arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">integer</td>
+			<td class="arguments argdesc">the number of variabes and constants that
+				are loaded</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">No exceptions</th>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.init();</code>
+	</p>
 
-  <h3>
-    <a name="set" />session_variable.set(variable_name, value)
-  </h3>
-  <p>The set function changes the content of a variable.</p>
-  <p>The changed content will be visible in the current session only. The
-    session_variable.set(variable_name, value) function will no affect any other
-    session in any way. Invocation of the session_variable.init() function will
-    undo the effect of any previously invoked
-    session_variable.set(variable_name, value) function call.</p>
-  <table class="arguments">
-    <tr>
-      <th class="arguments" colspan="3">Arguments</th>
-    </tr>
-    <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">variable_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable to update</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">value</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The new content for the variable. <br>
-        <br> The value must have the type specified for the variable.
-      </td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Returns</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The old content</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable "<i>&lt;variable_name&gt;</i>"
-        does not exist
-      </td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">0A000</td>
-      <td class="arguments argdesc">constant "<i>&lt;variable_name&gt;</i>"
-        cannot be set
-      </td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_name must be filled</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22023</td>
-      <td class="arguments argdesc">value must be of type <i>&lt;variable_type&gt;</i>,
-        but is of type <i>&lt;the actual type&gt;</i></td>
-    </tr>
-  </table>
-  <p>
-    Example:<br>
-    <code>select session_variable.set('my_variable', 'a bit of text for
-      my variable'::text);</code>
-  </p>
+	<h3>
+		<a name="set" />session_variable.set(variable_name, value)
+	</h3>
+	<p>The set function changes the content of a variable.</p>
+	<p>The changed content will be visible in the current session only. The
+		session_variable.set(variable_name, value) function will no affect any other
+		session in any way. Invocation of the session_variable.init() function will
+		undo the effect of any previously invoked session_variable.set(variable_name,
+		value) function call.</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">Arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">variable_name</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">Name of the variable to update</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">value</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">The new content for the variable. <br>
+				<br> The value must have the type specified for the variable.
+			</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">The old content</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">02000</td>
+			<td class="arguments argdesc">variable "<i>&lt;variable_name&gt;</i>"
+				does not exist
+			</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">0A000</td>
+			<td class="arguments argdesc">constant "<i>&lt;variable_name&gt;</i>"
+				cannot be set
+			</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable_name must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22023</td>
+			<td class="arguments argdesc">value must be of type <i>&lt;variable_type&gt;</i>,
+				but is of type <i>&lt;the actual type&gt;</i></td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.set('my_variable', 'a bit of text for my
+			variable'::text);</code>
+	</p>
 
-  <h3>
-    <a name="get" />session_variable.get(variable_or_constant_name,
-    just_for_result_type)
-  </h3>
-  <p>The set function changes the content of a variable.</p>
-  <p>The changed content will be visible in the current session only. The
-    session_variable.set(variable_name, value) function will no affect any other
-    session in any way. Invocation of the session_variable.init() function will
-    undo the effect of any previously invoked
-    session_variable.set(variable_name, value) function call.</p>
-  <table class="arguments">
-    <tr>
-      <th class="arguments" colspan="3">Arguments</th>
-    </tr>
-    <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">variable_or_constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable or constant</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">just_for_result_type</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">In postgres, a function can only return
-        anyelement if it has got an anyelement argument. The type of the
-        anyelement argument will be the same as the anyelement returntype. So we
-        need an argument here with the type of the variable or constant. <br>
-        <br> The value must have the type specified for the variable or
-        constant.
-      </td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Returns</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The content of the variable or constant</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
-        does not exist
-      </td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_name must be filled</td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22023</td>
-      <td class="arguments argdesc">please invoke as session_variable.get(<i>&lt;variable_or_constant_name&gt;</i>,
-        null::<i>&lt;type&gt;</i>)
-      </td>
-    </tr>
-  </table>
-  <p>
-    Example:<br>
-    <code>select session_variable.get('my_variable', null::text);</code>
-  </p>
+	<h3>
+		<a name="get" />session_variable.get(variable_or_constant_name,
+		just_for_result_type)
+	</h3>
+	<p>Returns the session-local contents of the specified variable.</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">Arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">variable_or_constant_name</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">Name of the variable or constant</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">just_for_result_type</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">In postgres, a function can only return
+				anyelement if it has got an anyelement argument. The type of the anyelement
+				argument will be the same as the anyelement returntype. So we need an
+				argument here with the type of the variable or constant. <br> <br>
+				The value must have the type specified for the variable or constant.
+			</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">The content of the variable or constant</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">02000</td>
+			<td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+				does not exist
+			</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable_name must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22023</td>
+			<td class="arguments argdesc">please invoke as session_variable.get(<i>&lt;variable_or_constant_name&gt;</i>,
+				null::<i>&lt;type&gt;</i>)
+			</td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.get('my_variable', null::text);</code>
+	</p>
 
-  <h3>
-    <a name="type_of">session_variable.type_of(variable_or_constant_name)</a>
-  </h3>
-  <p>Returns the type of the variable or constant</p>
-  <table class="arguments">
-    <tr>
-      <th class="arguments" colspan="3">arguments</th>
-    </tr>
-    <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">variable_or_constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable or constant</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Returns</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">regtype</td>
-      <td class="arguments argdesc">The type of the specified variable or
-        constant</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
-        does not exist
-      </td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_or_constant_name must be
-        filled</td>
-    </tr>
-  </table>
-  <p>
-    Example:<br>
-    <code>select session_variable.type_of('my_variable');</code>
-  </p>
+	<h3>
+		<a name="exists" />session_variable.exists(variable_or_constant_name)
+	</h3>
+	<p>Returns the specified variable exists in the local session.</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">Arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">boolean</td>
+			<td class="arguments argdesc">true if the variable or constant exists in
+				the current session.</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable_name must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22023</td>
+			<td class="arguments argdesc">please invoke as session_variable.exists(<i>&lt;variable_or_constant_name&gt;</i>)
+			</td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.exists('my_variable');</code>
+	</p>
 
-  <h3>
-    <a name="is_constant">session_variable.is_constant(variable_or_constant_name)</a>
-  </h3>
-  <p>
-    Returns true if "<i>variable_or_constant_name</i>" happens to be a constant
-    or false if it is a session variable
-  </p>
-  <table class="arguments">
-    <tr>
-      <th class="arguments" colspan="3">arguments</th>
-    </tr>
-    <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">variable_or_constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable or constant</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Returns</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">regtype</td>
-      <td class="arguments argdesc">The type of the specified variable or
-        constant</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
-        does not exist
-      </td>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_or_constant_name must be
-        filled</td>
-    </tr>
-  </table>
-  <p>
-    Example:<br>
-    <code>select session_variable.type_of('my_variable');</code>
-  </p>
+	<h3>
+		<a name="type_of">session_variable.type_of(variable_or_constant_name)</a>
+	</h3>
+	<p>Returns the type of the variable or constant</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">variable_or_constant_name</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">Name of the variable or constant</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">regtype</td>
+			<td class="arguments argdesc">The type of the specified variable or
+				constant</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">02000</td>
+			<td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+				does not exist
+			</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable_or_constant_name must be filled</td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.type_of('my_variable');</code>
+	</p>
 
-  <h3>
-    <a name="is_constant">session_variable.get_session_variable_version()</a>
-  </h3>
-  <p>
-    Returns the code version of the extension, currently '1.0.1'. 
-  </p>
-  <table class="arguments">
-    <tr>
-      <th class="arguments" colspan="3">arguments</th>
-    </tr>
-    <tr>
-      <td class="arguments" colspan="3">none</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Returns</th>
-    </tr>
-    <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">The code version of the session_variable
-       extension.</td>
-    </tr>
-    <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
-    </tr>
-    <tr>
-      <td class="arguments" colspan="3">none</td>
-    </tr>
-  </table>
-  <p>
-    Example:<br>
-    <code>select session_variable.get_session_variable_version();</code>
-  </p>
+	<h3>
+		<a name="is_constant">session_variable.is_constant(variable_or_constant_name)</a>
+	</h3>
+	<p>
+		Returns true if "<i>variable_or_constant_name</i>" happens to be a constant or
+		false if it is a session variable
+	</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">variable_or_constant_name</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">Name of the variable or constant</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">regtype</td>
+			<td class="arguments argdesc">The type of the specified variable or
+				constant</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">02000</td>
+			<td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+				does not exist
+			</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable_or_constant_name must be filled</td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.type_of('my_variable');</code>
+	</p>
 
-  <h2>Security</h2>
-  <p>
-    Usage of <a href="#create_variable_2">session_variable.create_variable(variable_name,
-      variable_type)</a>, <a href="#create_variable_3">session_variable.create_variable(variable_name,
-      variable_type, initial_value)</a>, <a href="#create_constant">session_variable.create_constant(constant_name,
-      constant_type, value)</a>, <a href="#alter_value">session_variable.alter_value(variable_or_constant_name,
-      value)</a> and <a href="#drop">session_variable.drop(variable_or_constant_name)</a>
-    is proteced by the "session_variable_administrator_role". The remaining
-    functions are protected by the "session_variable_user_role". The
-    "session_variable_administrator_role" includes the
-    "session_variable_user_role".
-  </p>
+	<h3>
+		<a name="is_constant">session_variable.get_session_variable_version()</a>
+	</h3>
+	<p>Returns the code version of the extension, currently '1.0.5'.</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">arguments</th>
+		</tr>
+		<tr>
+			<td class="arguments" colspan="3">none</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">The code version of the session_variable
+				extension.</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments" colspan="3">none</td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.get_session_variable_version();</code>
+	</p>
 
-  <div class="copyright">
-    Copyright (c) Splendid Data Product Development B.V. 2013<br> This
-    program is free software: You may redistribute and/or modify under the terms
-    of the GNU General Public License as published by the Free Software
-    Foundation, either version 3 of the License, or (at Client's option) any
-    later version.<br> This program is distributed in the hope that it will
-    be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-    Public License for more details.<br> You should have received a copy of
-    the GNU General Public License along with this program. If not, Client
-    should obtain one via www.gnu.org/licenses/.
-  </div>
+	<h2>Security</h2>
+	<p>
+		Usage of <a href="#create_variable_2">session_variable.create_variable(variable_name,
+			variable_type)</a>, <a href="#create_variable_3">session_variable.create_variable(variable_name,
+			variable_type, initial_value)</a>, <a href="#create_constant">session_variable.create_constant(constant_name,
+			constant_type, value)</a>, <a href="#alter_value">session_variable.alter_value(variable_or_constant_name,
+			value)</a> and <a href="#drop">session_variable.drop(variable_or_constant_name)</a>
+		is proteced by the "session_variable_administrator_role".
+	</p>
+	<p>The remaining functions are protected by the
+		"session_variable_user_role".</p>
+	<p>The "session_variable_administrator_role" includes the
+		"session_variable_user_role".</p>
+
+	<div class="copyright">
+		Copyright (c) Splendid Data Product Development B.V. 2013<br> This
+		program is free software: You may redistribute and/or modify under the terms
+		of the GNU General Public License as published by the Free Software
+		Foundation, either version 3 of the License, or (at Client's option) any later
+		version.<br> This program is distributed in the hope that it will be
+		useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+		Public License for more details.<br> You should have received a copy of
+		the GNU General Public License along with this program. If not, Client should
+		obtain one via www.gnu.org/licenses/.
+	</div>
 <body>
 </html>

@@ -163,7 +163,7 @@ Datum coerceOutput(Oid internalType, int internalTypeLength, Datum internalData,
  * @param int internalTypeLength: The typlen of the defined type of the session variable
  * @param Datum internalData: The content of the variable
  * @param Oid outputType: The type of the expected output
- *  @param bool* castFailed: will be set to false if the coercion completed correctly of true if it failed
+ * @param bool* castFailed: will be set to false if the coercion completed correctly of true if it failed
  * @return Datum
  */
 Datum coerceOutput(Oid internalType, int internalTypeLength, Datum internalData,
