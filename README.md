@@ -1,5 +1,7 @@
 # session_variable
-The session_variable Postgres database extension provides a way to create and maintain session scoped variables and constants, more or less like Oracle's global variables.
+The session_variable Postgres database extension provides a way to create and
+maintain session scoped variables and constants. This extension can be part of
+a solution to mimic Oracle's global constants and variables.
 ##Introduction 
 The session_variable extension registers variables and constants. But internally
 they are intermixed and treated as the same. There is just a boolean that
@@ -779,15 +781,15 @@ session_variable.init() function.
     <code>select session_variable.get_session_variable_version();</code>
   </p>
 
-  <h2>Security</h2>
-  <p>
-    Usage of session_variable.create_variable(variable_name,
-      variable_type), session_variable.create_variable(variable_name,
-      variable_type, initial_value), session_variable.create_constant(constant_name,
-      constant_type, value), session_variable.alter_value(variable_or_constant_name,
-      value) and session_variable.drop(variable_or_constant_name)
-    is proteced by the "session_variable_administrator_role". The remaining
-    functions are protected by the "session_variable_user_role". The
-    "session_variable_administrator_role" includes the
-    "session_variable_user_role".
-  </p>
+##Security
+Usage of session\_variable.create\_variable(variable\_name, variable\_type),
+session\_variable.create\_variable(variable\_name, variable\_type, initial\_value),
+session\_variable.create\_constant(constant\_name, constant\_type, value),
+session\_variable.alter\_value(variable\_or\_constant\_name, value)
+and session\_variable.drop(variable\_or\_constant\_name) is protected by the
+"session\_variable\_administrator\_role". 
+ 
+The remaining functions are protected by the "session\_variable\_user\_role".
+
+The "session\_variable\_administrator\_role" includes the 
+"session\_variable\_user\_role".
