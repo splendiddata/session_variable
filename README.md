@@ -73,11 +73,11 @@ select session_variable.drop('my_variable');
 The session_variable database extension has been tested on Postgres versions
 9.5, 9.6 and 10.
 <h2>Installation</h2>
-Install as a normal Posrgres database extension:
- - Make sure pg_config points to the right places
- - execute make
- - execute sudo make install installcheck
-and then in the Postgres database execute:
+Install as a normal Posrgres database extension:<br>
+ - Make sure pg_config points to the right places<br>
+ - execute make<br>
+ - execute sudo make install installcheck<br>
+and then in the Postgres database execute:<br>
  - create extension session_variable;
  
 <h2>Functions<h2>
