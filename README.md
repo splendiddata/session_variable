@@ -1,33 +1,3 @@
-<style>
-.arguments {
-  border-color:gray;
-  border-style:solid;
-  border-width:1px;
-  border-collapse:collapse;
-  padding-left:10px;
-  padding-right:10px;
-  padding-top:5px;
-  padding-bottom:5px;
-  text-align:left;
-}
-
-
-
-.argname {
-  width:14em;
-  vertical-align:top;
-}
-
-.argtype {
-  width:12em;
-  vertical-align:top;
-}
-
-.argdesc {
-  width:40em;
-  vertical-align:top;
-}
-</style>
 # session_variable
 The session_variable Postgres database extension provides a way to create and maintain session scoped variables and constants, more or less like Oracle's global variables.
 ##Introduction 
@@ -121,49 +91,49 @@ session_variable.init() function.
 
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">Arguments</th>
+      <th align="left" colspan="3">Arguments</th>
     </tr>
     <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
+      <th align="left">name</th>
+      <th align="left">type</th>
+      <th align="left">description</th>
     </tr>
     <tr>
-      <td class="arguments argname">variable_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable to be created</td>
+      <td>variable_name</td>
+      <td>text</td>
+      <td>Name of the variable to be created</td>
     </tr>
     <tr>
-      <td class="arguments argname">variable_type</td>
-      <td class="arguments argtype">regtype</td>
-      <td class="arguments argdesc">The datatype that can be stored in the
+      <td>variable_type</td>
+      <td>regtype</td>
+      <td>The datatype that can be stored in the
         variable</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">boolean</td>
-      <td class="arguments argdesc">true if ok</td>
+      <td>&nbsp;</td>
+      <td>boolean</td>
+      <td>true if ok</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
+      <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_name must be filled</td>
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>variable_name must be filled</td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable type must be filled</td>
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>variable type must be filled</td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">23505</td>
-      <td class="arguments argdesc">Variable "<i>&lt;variable_name&gt;</i>"
+      <td>&nbsp;</td>
+      <td>23505</td>
+      <td>Variable "<i>&lt;variable_name&gt;</i>"
         already exists
       </td>
     </tr>
@@ -187,64 +157,64 @@ session_variable.init() function.
     they invoke the session_variable.init() function.</p>
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">Arguments</th>
+      <th align="left" colspan="3">Arguments</th>
     </tr>
     <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
+      <th align="left">name</th>
+      <th align="left">type</th>
+      <th align="left">description</th>
     </tr>
     <tr>
-      <td class="arguments argname">variable_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable to be created</td>
+      <td>variable_name</td>
+      <td>text</td>
+      <td>Name of the variable to be created</td>
     </tr>
     <tr>
-      <td class="arguments argname">variable_type</td>
-      <td class="arguments argtype">regtype</td>
-      <td class="arguments argdesc">The datatype that can be stored in the
+      <td>variable_type</td>
+      <td>regtype</td>
+      <td>The datatype that can be stored in the
         variable</td>
     </tr>
     <tr>
-      <td class="arguments argname">initial_value</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The initial value that will be loaded
+      <td>initial_value</td>
+      <td>anyelement</td>
+      <td>The initial value that will be loaded
         on session start and to which the variable will be reverted when the
         session_variable.init() function is invoked. <br> <br> The
         value must have the type specified by variable_type.
       </td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">boolean</td>
-      <td class="arguments argdesc">true if ok</td>
+      <td>&nbsp;</td>
+      <td>boolean</td>
+      <td>true if ok</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
+      <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_name must be filled</td>
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>variable_name must be filled</td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable type must be filled</td>
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>variable type must be filled</td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22023</td>
-      <td class="arguments argdesc">value must be of type <i>&lt;variable_type&gt;</i>,
+      <td>&nbsp;</td>
+      <td>22023</td>
+      <td>value must be of type <i>&lt;variable_type&gt;</i>,
         but is of type <i>&lt;the actual type&gt;</i></td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">23505</td>
-      <td class="arguments argdesc">Variable "<i>&lt;variable_name&gt;</i>"
+      <td>&nbsp;</td>
+      <td>23505</td>
+      <td>Variable "<i>&lt;variable_name&gt;</i>"
         already exists
       </td>
     </tr>
@@ -270,63 +240,63 @@ session_variable.init() function.
     session_variable.init() function.</p>
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">Arguments</th>
+      <th align="left" colspan="3">Arguments</th>
     </tr>
     <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
+      <th align="left">name</th>
+      <th align="left">type</th>
+      <th align="left">description</th>
     </tr>
     <tr>
-      <td class="arguments argname">constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the constant to be created</td>
+      <td>constant_name</td>
+      <td>text</td>
+      <td>Name of the constant to be created</td>
     </tr>
     <tr>
-      <td class="arguments argname">constant_type</td>
-      <td class="arguments argtype">regtype</td>
-      <td class="arguments argdesc">The datatype that will be stored in
+      <td>constant_type</td>
+      <td>regtype</td>
+      <td>The datatype that will be stored in
         this constant</td>
     </tr>
     <tr>
-      <td class="arguments argname">value</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The value that will be loaded on
+      <td>value</td>
+      <td>anyelement</td>
+      <td>The value that will be loaded on
         session start or inocation of the session_variable.init() function. <br>
         <br> The value must have the type specified by constant_type.
       </td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">boolean</td>
-      <td class="arguments argdesc">true if ok</td>
+      <td>&nbsp;</td>
+      <td>boolean</td>
+      <td>true if ok</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
+      <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">constant_name must be filled</td>
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>constant_name must be filled</td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">constant_type must be filled</td>
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>constant_type must be filled</td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22023</td>
-      <td class="arguments argdesc">value must be of type <i>&lt;constant_type&gt;</i>,
+      <td>&nbsp;</td>
+      <td>22023</td>
+      <td>value must be of type <i>&lt;constant_type&gt;</i>,
         but is of type <i>&lt;the actual type&gt;</i></td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">23505</td>
-      <td class="arguments argdesc">Variable "<i>&lt;variable_name&gt;</i>"
+      <td>&nbsp;</td>
+      <td>23505</td>
+      <td>Variable "<i>&lt;variable_name&gt;</i>"
         already exists
       </td>
     </tr>
@@ -350,56 +320,56 @@ session_variable.init() function.
     session_variable.init() function.</p>
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">Arguments</th>
+      <th align="left" colspan="3">Arguments</th>
     </tr>
     <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
+      <th align="left">name</th>
+      <th align="left">type</th>
+      <th align="left">description</th>
     </tr>
     <tr>
-      <td class="arguments argname">variable_or_constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable or constant of
+      <td>variable_or_constant_name</td>
+      <td>text</td>
+      <td>Name of the variable or constant of
         which the value is to be changed</td>
     </tr>
     <tr>
-      <td class="arguments argname">value</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The value new (initial) value for the
+      <td>value</td>
+      <td>anyelement</td>
+      <td>The value new (initial) value for the
         specified variable or constant <br> <br> The value must have
         the type that was specified when the variable or constant was created.
       </td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The old value of the constant or
+      <td>&nbsp;</td>
+      <td>anyelement</td>
+      <td>The old value of the constant or
         variable</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
+      <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+      <td>&nbsp;</td>
+      <td>02000</td>
+      <td>variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
         does not exist
       </td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_or_constant_name must be
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>variable_or_constant_name must be
         filled</td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22023</td>
-      <td class="arguments argdesc">value must be of type <i>&lt;type&gt;</i>,
+      <td>&nbsp;</td>
+      <td>22023</td>
+      <td>value must be of type <i>&lt;type&gt;</i>,
         but is of type <i>&lt;the actual type&gt;</i></td>
     </tr>
   </table>
@@ -420,41 +390,41 @@ session_variable.init() function.
     function.</p>
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">arguments</th>
+      <th align="left" colspan="3">arguments</th>
     </tr>
     <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
+      <th align="left">name</th>
+      <th align="left">type</th>
+      <th align="left">description</th>
     </tr>
     <tr>
-      <td class="arguments argname">variable_or_constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable or constant to be
+      <td>variable_or_constant_name</td>
+      <td>text</td>
+      <td>Name of the variable or constant to be
         removed</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">boolean</td>
-      <td class="arguments argdesc">true if ok</td>
+      <td>&nbsp;</td>
+      <td>boolean</td>
+      <td>true if ok</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
+      <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+      <td>&nbsp;</td>
+      <td>02000</td>
+      <td>variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
         does not exist
       </td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_or_constant_name must be
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>variable_or_constant_name must be
         filled</td>
     </tr>
   </table>
@@ -473,19 +443,19 @@ session_variable.init() function.
     untouched.</p>
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">No arguments</th>
+      <th align="left" colspan="3">No arguments</th>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">integer</td>
-      <td class="arguments argdesc">the number of variabes and constants
+      <td>&nbsp;</td>
+      <td>integer</td>
+      <td>the number of variabes and constants
         that are loaded</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">No exceptions</th>
+      <th align="left" colspan="3">No exceptions</th>
     </tr>
   </table>
   <p>
@@ -504,59 +474,59 @@ session_variable.init() function.
     session_variable.set(variable_name, value) function call.</p>
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">Arguments</th>
+      <th align="left" colspan="3">Arguments</th>
     </tr>
     <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
+      <th align="left">name</th>
+      <th align="left">type</th>
+      <th align="left">description</th>
     </tr>
     <tr>
-      <td class="arguments argname">variable_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable to update</td>
+      <td>variable_name</td>
+      <td>text</td>
+      <td>Name of the variable to update</td>
     </tr>
     <tr>
-      <td class="arguments argname">value</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The new content for the variable. <br>
+      <td>value</td>
+      <td>anyelement</td>
+      <td>The new content for the variable. <br>
         <br> The value must have the type specified for the variable.
       </td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The old content</td>
+      <td>&nbsp;</td>
+      <td>anyelement</td>
+      <td>The old content</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
+      <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable "<i>&lt;variable_name&gt;</i>"
+      <td>&nbsp;</td>
+      <td>02000</td>
+      <td>variable "<i>&lt;variable_name&gt;</i>"
         does not exist
       </td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">0A000</td>
-      <td class="arguments argdesc">constant "<i>&lt;variable_name&gt;</i>"
+      <td>&nbsp;</td>
+      <td>0A000</td>
+      <td>constant "<i>&lt;variable_name&gt;</i>"
         cannot be set
       </td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_name must be filled</td>
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>variable_name must be filled</td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22023</td>
-      <td class="arguments argdesc">value must be of type <i>&lt;variable_type&gt;</i>,
+      <td>&nbsp;</td>
+      <td>22023</td>
+      <td>value must be of type <i>&lt;variable_type&gt;</i>,
         but is of type <i>&lt;the actual type&gt;</i></td>
     </tr>
   </table>
@@ -573,22 +543,22 @@ session_variable.init() function.
   <p>Returns the session local content of the named variable or constant.</p>
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">Arguments</th>
+      <th align="left" colspan="3">Arguments</th>
     </tr>
     <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
+      <th align="left">name</th>
+      <th align="left">type</th>
+      <th align="left">description</th>
     </tr>
     <tr>
-      <td class="arguments argname">variable_or_constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable or constant</td>
+      <td>variable_or_constant_name</td>
+      <td>text</td>
+      <td>Name of the variable or constant</td>
     </tr>
     <tr>
-      <td class="arguments argname">just_for_result_type</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">In postgres, a function can only return
+      <td>just_for_result_type</td>
+      <td>anyelement</td>
+      <td>In postgres, a function can only return
         anyelement if it has got an anyelement argument. The type of the
         anyelement argument will be the same as the anyelement returntype. So we
         need an argument here with the type of the variable or constant. <br>
@@ -597,32 +567,32 @@ session_variable.init() function.
       </td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">anyelement</td>
-      <td class="arguments argdesc">The content of the variable or constant</td>
+      <td>&nbsp;</td>
+      <td>anyelement</td>
+      <td>The content of the variable or constant</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
+      <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+      <td>&nbsp;</td>
+      <td>02000</td>
+      <td>variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
         does not exist
       </td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_name must be filled</td>
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>variable_name must be filled</td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22023</td>
-      <td class="arguments argdesc">please invoke as session_variable.get(<i>&lt;variable_or_constant_name&gt;</i>,
+      <td>&nbsp;</td>
+      <td>22023</td>
+      <td>please invoke as session_variable.get(<i>&lt;variable_or_constant_name&gt;</i>,
         null::<i>&lt;type&gt;</i>)
       </td>
     </tr>
@@ -638,34 +608,34 @@ session_variable.init() function.
   <p>Returns the specified variable exists in the local session.</p>
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">Arguments</th>
+      <th align="left" colspan="3">Arguments</th>
     </tr>
     <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
+      <th align="left">name</th>
+      <th align="left">type</th>
+      <th align="left">description</th>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">boolean</td>
-      <td class="arguments argdesc">true if the variable or constant exists in
+      <td>&nbsp;</td>
+      <td>boolean</td>
+      <td>true if the variable or constant exists in
         the current session.</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
+      <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_name must be filled</td>
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>variable_name must be filled</td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22023</td>
-      <td class="arguments argdesc">please invoke as session_variable.exists(<i>&lt;variable_or_constant_name&gt;</i>)
+      <td>&nbsp;</td>
+      <td>22023</td>
+      <td>please invoke as session_variable.exists(<i>&lt;variable_or_constant_name&gt;</i>)
       </td>
     </tr>
   </table>
@@ -680,41 +650,41 @@ session_variable.init() function.
   <p>Returns the type of the variable or constant</p>
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">arguments</th>
+      <th align="left" colspan="3">arguments</th>
     </tr>
     <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
+      <th align="left">name</th>
+      <th align="left">type</th>
+      <th align="left">description</th>
     </tr>
     <tr>
-      <td class="arguments argname">variable_or_constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable or constant</td>
+      <td>variable_or_constant_name</td>
+      <td>text</td>
+      <td>Name of the variable or constant</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">regtype</td>
-      <td class="arguments argdesc">The type of the specified variable or
+      <td>&nbsp;</td>
+      <td>regtype</td>
+      <td>The type of the specified variable or
         constant</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
+      <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+      <td>&nbsp;</td>
+      <td>02000</td>
+      <td>variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
         does not exist
       </td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_or_constant_name must be
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>variable_or_constant_name must be
         filled</td>
     </tr>
   </table>
@@ -732,41 +702,41 @@ session_variable.init() function.
   </p>
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">arguments</th>
+      <th align="left" colspan="3">arguments</th>
     </tr>
     <tr>
-      <th class="arguments argname">name</th>
-      <th class="arguments argtype">type</th>
-      <th class="arguments argdesc">description</th>
+      <th align="left">name</th>
+      <th align="left">type</th>
+      <th align="left">description</th>
     </tr>
     <tr>
-      <td class="arguments argname">variable_or_constant_name</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">Name of the variable or constant</td>
+      <td>variable_or_constant_name</td>
+      <td>text</td>
+      <td>Name of the variable or constant</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">regtype</td>
-      <td class="arguments argdesc">The type of the specified variable or
+      <td>&nbsp;</td>
+      <td>regtype</td>
+      <td>The type of the specified variable or
         constant</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
+      <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">02000</td>
-      <td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+      <td>&nbsp;</td>
+      <td>02000</td>
+      <td>variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
         does not exist
       </td>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">22004</td>
-      <td class="arguments argdesc">variable_or_constant_name must be
+      <td>&nbsp;</td>
+      <td>22004</td>
+      <td>variable_or_constant_name must be
         filled</td>
     </tr>
   </table>
@@ -783,25 +753,25 @@ session_variable.init() function.
   </p>
   <table class="arguments">
     <tr>
-      <th class="arguments" colspan="3">arguments</th>
+      <th align="left" colspan="3">arguments</th>
     </tr>
     <tr>
-      <td class="arguments" colspan="3">none</td>
+      <td colspan="3">none</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Returns</th>
+      <th align="left" colspan="3">Returns</th>
     </tr>
     <tr>
-      <td class="arguments argname">&nbsp;</td>
-      <td class="arguments argtype">text</td>
-      <td class="arguments argdesc">The code version of the session_variable
+      <td>&nbsp;</td>
+      <td>text</td>
+      <td>The code version of the session_variable
        extension.</td>
     </tr>
     <tr>
-      <th class="arguments" colspan="3">Exceptions</th>
+      <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td class="arguments" colspan="3">none</td>
+      <td colspan="3">none</td>
     </tr>
   </table>
   <p>
