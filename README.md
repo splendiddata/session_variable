@@ -178,8 +178,8 @@ session_variable.init() function.
         variable</td>
     </tr>
     <tr>
-      <td>initial_value</td>
-      <td>anyelement</td>
+      <td valign="top">initial_value</td>
+      <td valign="top">anyelement</td>
       <td>The initial value that will be loaded
         on session start and to which the variable will be reverted when the
         session_variable.init() function is invoked. <br> <br> The
@@ -261,8 +261,8 @@ session_variable.init() function.
         this constant</td>
     </tr>
     <tr>
-      <td>value</td>
-      <td>anyelement</td>
+      <td valign="top">value</td>
+      <td valign="top">anyelement</td>
       <td>The value that will be loaded on
         session start or inocation of the session_variable.init() function. <br>
         <br> The value must have the type specified by constant_type.
@@ -336,8 +336,8 @@ session_variable.init() function.
         which the value is to be changed</td>
     </tr>
     <tr>
-      <td>value</td>
-      <td>anyelement</td>
+      <td valign="top">value</td>
+      <td valign="top">anyelement</td>
       <td>The value new (initial) value for the
         specified variable or constant <br> <br> The value must have
         the type that was specified when the variable or constant was created.
@@ -489,8 +489,8 @@ session_variable.init() function.
       <td>Name of the variable to update</td>
     </tr>
     <tr>
-      <td>value</td>
-      <td>anyelement</td>
+      <td valign="top">value</td>
+      <td valign="top">anyelement</td>
       <td>The new content for the variable. <br>
         <br> The value must have the type specified for the variable.
       </td>
@@ -558,8 +558,8 @@ session_variable.init() function.
       <td>Name of the variable or constant</td>
     </tr>
     <tr>
-      <td>just_for_result_type</td>
-      <td>anyelement</td>
+      <td valign="top">just_for_result_type</td>
+      <td valign="top">anyelement</td>
       <td>In postgres, a function can only return
         anyelement if it has got an anyelement argument. The type of the
         anyelement argument will be the same as the anyelement returntype. So we
@@ -782,14 +782,16 @@ session_variable.init() function.
   </p>
 
 <h2>Security</h2>
-Usage of session\_variable.create\_variable(variable\_name, variable\_type),
-session\_variable.create\_variable(variable\_name, variable\_type, initial\_value),
-session\_variable.create\_constant(constant\_name, constant\_type, value),
-session\_variable.alter\_value(variable\_or\_constant\_name, value)
-and session\_variable.drop(variable\_or\_constant\_name) is protected by the
-"session\_variable\_administrator\_role". 
- 
-The remaining functions are protected by the "session\_variable\_user\_role".
-
-The "session\_variable\_administrator\_role" includes the 
-"session\_variable\_user\_role".
+<p>
+Usage of session_variable.create_variable(variable_name, variable_type),
+session_variable.create_variable(variable_name, variable_type, initial_value),
+session_variable.create_constant(constant_name, constant_type, value),
+session_variable.alter_value(variable_or_constant_name, value)
+and session_variable.drop(variable_or_constant_name) is protected by the
+"session_variable_administrator_role". 
+</p><p>
+The remaining functions are protected by the "session_variable_user_role".
+</p><p>
+The "session_variable_administrator_role" includes the 
+"session_variable_user_role".
+</p>
