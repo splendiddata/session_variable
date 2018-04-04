@@ -795,3 +795,16 @@ The remaining functions are protected by the "session_variable_user_role".
 The "session_variable_administrator_role" includes the 
 "session_variable_user_role".
 </p>
+
+## Save / restore
+
+Session variables are stored in the session_variable.variables table, which 
+can be saved and restored as any other table. Restored values will be visible
+to all sessions that started after the restore committed. Sessions that were
+started before the restore will still see the old (session local!) content
+unless they invoke session_variable.init().
+
+The content of constants and the default value of variables however is stored
+in the initial_value column as a binary memory image. This will cause trouble
+when the table is copied from a little-endian machine to a big-endian machine
+v.v.
