@@ -92,13 +92,13 @@ select session_variable.type_of('initially null');
 select session_variable.set('initially null', session_variable.get('schema_1.my_var', null::schema_1.my_type));
  set 
 -----
- 
+ t
 (1 row)
 
 select session_variable.set('schema_1.my_var', null::schema_1.my_type);
-       set       
------------------
- ("some text",2)
+ set 
+-----
+ t
 (1 row)
 
 select session_variable.get('schema_1.my_var', null::schema_1.my_type);
@@ -118,6 +118,16 @@ select session_variable.get('initially null', null::schema_1.my_type);
 -----------------
  ("some text",2)
 (1 row)
+
+select session_variable.dump();
+                                                                     dump                                                                      
+-----------------------------------------------------------------------------------------------------------------------------------------------
+ truncate table session_variable.variables;
+ select session_variable.init();
+ select session_variable.create_variable('initially null', 'schema_1.my_type'::regtype, NULL::schema_1.my_type);
+ select session_variable.create_variable('schema_1.my_var', 'schema_1.my_type'::regtype, '("some text",2)'::schema_1.my_type);
+ select session_variable.create_variable('schema_2.my_var', 'schema_2.my_type'::regtype, '(223344,2.5," text in varchar")'::schema_2.my_type);
+(5 rows)
 
 -- cleanup
 drop schema if exists session_variable cascade;

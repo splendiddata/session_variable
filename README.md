@@ -125,7 +125,7 @@ session_variable.init() function.
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
-      <td>variable_name must be filled</td>
+      <td>variable name must be filled</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -134,8 +134,13 @@ session_variable.init() function.
     </tr>
     <tr>
       <td>&nbsp;</td>
+      <td>2200F</td>
+      <td>variable name must be filled</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
       <td>23505</td>
-      <td>Variable "<i>&lt;variable_name&gt;</i>"
+      <td>Variable "<i>&lt;variable name&gt;</i>"
         already exists
       </td>
     </tr>
@@ -147,8 +152,7 @@ session_variable.init() function.
   </p>
 
   <h3>
-    session_variable.create_variable(variable_name,
-    variable_type, initial_value)
+    session_variable.create_variable(variable_name, variable_type, initial_value)
   </h3>
   <p>The create_variable function creates a new variable with the specified
     initial value.</p>
@@ -200,12 +204,17 @@ session_variable.init() function.
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
-      <td>variable_name must be filled</td>
+      <td>variable name must be filled</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
       <td>variable type must be filled</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>2200F</td>
+      <td>variable name must be filled</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -228,8 +237,7 @@ session_variable.init() function.
   </p>
 
   <h3>
-    session_variable.create_constant(constant_name,
-    constant_type, value)
+    session_variable.create_constant(constant_name, constant_type, value)
   </h3>
   <p>The create_constant function creates a new constant with the specified
     value.</p>
@@ -282,12 +290,17 @@ session_variable.init() function.
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
-      <td>constant_name must be filled</td>
+      <td>constant name must be filled</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
-      <td>constant_type must be filled</td>
+      <td>constant type must be filled</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>2200F</td>
+      <td>constant name must be filled</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -311,8 +324,7 @@ session_variable.init() function.
   </p>
 
   <h3>
-    session_variable.alter_value(variable_or_constant_name,
-    value)
+    session_variable.alter_value(variable_or_constant_name, value)
   </h3>
   <p>Alters the value of the contstant or the initial value of the variable.</p>
   <p>The altered value will be available in the current session and in
@@ -348,9 +360,8 @@ session_variable.init() function.
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>anyelement</td>
-      <td>The old value of the constant or
-        variable</td>
+      <td>boolean</td>
+      <td>true if ok</td>
     </tr>
     <tr>
       <th align="left" colspan="3">Exceptions</th>
@@ -365,8 +376,12 @@ session_variable.init() function.
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
-      <td>variable_or_constant_name must be
-        filled</td>
+      <td>variable or constant name must be filled</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>2200F</td>
+      <td>variable or constant name must be filled</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -426,8 +441,12 @@ session_variable.init() function.
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
-      <td>variable_or_constant_name must be
-        filled</td>
+      <td>variable or constant name must be filled</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>2200F</td>
+      <td>variable or constant name must be filled</td>
     </tr>
   </table>
   <p>
@@ -500,8 +519,8 @@ session_variable.init() function.
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>anyelement</td>
-      <td>The old content</td>
+      <td>boolean</td>
+      <td>true if ok</td>
     </tr>
     <tr>
       <th align="left" colspan="3">Exceptions</th>
@@ -523,7 +542,12 @@ session_variable.init() function.
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
-      <td>variable_name must be filled</td>
+      <td>variable name must be filled</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>2200F</td>
+      <td>variable name must be filled</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -589,7 +613,7 @@ session_variable.init() function.
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
-      <td>variable_name must be filled</td>
+      <td>variable name must be filled</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -632,7 +656,7 @@ session_variable.init() function.
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
-      <td>variable_name must be filled</td>
+      <td>variable name must be filled</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -686,8 +710,7 @@ session_variable.init() function.
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
-      <td>variable_or_constant_name must be
-        filled</td>
+      <td>variable or constant name must be filled</td>
     </tr>
   </table>
   <p>
@@ -738,8 +761,7 @@ session_variable.init() function.
     <tr>
       <td>&nbsp;</td>
       <td>22004</td>
-      <td>variable_or_constant_name must be
-        filled</td>
+      <td>variable or constant name must be filled</td>
     </tr>
   </table>
   <p>
@@ -748,10 +770,58 @@ session_variable.init() function.
   </p>
 
   <h3>
+    session_variable.dump(do_truncate)
+  </h3>
+  <p>
+    Generates a 'script' that may be used as backup. 
+  </p>
+  <p>
+    Take care when using PSQL's \copy command. It will double all backslash (\)
+    characters.
+  </p>
+  <table class="arguments">
+    <tr>
+      <th align="left" colspan="3">arguments</th>
+    </tr>
+    <tr>
+      <th align="left">name</th>
+      <th align="left">type</th>
+      <th align="left">description</th>
+    </tr>
+    <tr>
+      <td>do_truncate</td>
+      <td>boolean</td>
+      <td>Optional argument, default true.<br><br>If true then the first line
+        returned will be "truncate table session_variable.variables;". If false
+        then the truncate statement will not be returned and all definitions
+        will be appended with " where not
+        session_variable.exists(<variable_name>)" </td>
+    </tr>
+    <tr>
+      <th align="left" colspan="3">Returns</th>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>setof text</td>
+      <td>The lines that together form the script.</td>
+    </tr>
+    <tr>
+      <th align="left" colspan="3">Exceptions</th>
+    </tr>
+    <tr>
+      <td colspan="3">none</td>
+    </tr>
+  </table>
+  <p>
+    Example:<br>
+    <code>select session_variable.dump();</code>
+  </p>
+
+  <h3>
     session_variable.get_session_variable_version()
   </h3>
   <p>
-    Returns the code version of the extension, currently '1.0.5'. 
+    Returns the code version of the extension, currently '2.0'. 
   </p>
   <table class="arguments">
     <tr>
@@ -786,8 +856,9 @@ session_variable.init() function.
 Usage of session_variable.create_variable(variable_name, variable_type),
 session_variable.create_variable(variable_name, variable_type, initial_value),
 session_variable.create_constant(constant_name, constant_type, value),
-session_variable.alter_value(variable_or_constant_name, value)
-and session_variable.drop(variable_or_constant_name) is protected by the
+session_variable.alter_value(variable_or_constant_name, value),
+session_variable.drop(variable_or_constant_name) and 
+session_variable.dump() is protected by the
 "session_variable_administrator_role". 
 </p><p>
 The remaining functions are protected by the "session_variable_user_role".
@@ -804,7 +875,36 @@ to all sessions that started after the restore committed. Sessions that were
 started before the restore will still see the old (session local!) content
 unless they invoke session_variable.init().
 
-The content of constants and the default value of variables however is stored
-in the initial_value column as a binary memory image. This will cause trouble
-when the table is copied from a little-endian machine to a big-endian machine
-v.v.
+## Release notes
+### version 2
+In version 1, the initial values of variables and constants were stored in the
+session_variable.variables table in a bytea representing a memory image of the
+content. This appeared problematic when copying data from one database to
+another as in array types and composite types oids are present in the memory
+image. So in version 2 the initial_value column is altered to a text column and
+serialization and deserialization is now routed via the typinput and typoutput
+functions. So now a database dump is portable (provided that the receiving
+database has got all user defined types available).
+
+Returning the previous value in the set() function and the alter() function
+proved not very useful and did impose some overhead. So in version 2 these
+functions return just a boolean, which will be 'true' in all cases.
+#### upgrade to version 2
+On the command line:
+
+> git pull<br>
+> make clean<br>
+> make<br>
+> sudo make install
+
+Then in a new database session
+
+> alter extension session_variable update;
+
+Ps.<br>
+The database will keep using the version 1 implementation of the extension
+until the "alter extension session_variable update;" command is executed. Make
+sure you do not restore any dump of the session_variable.variables table that
+was created before the "alter extension session_variable update;" into a
+database that already executes version 2.
+

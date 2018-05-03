@@ -31,7 +31,7 @@ select session_variable.create_variable('just text', 'text'::regtype, 'just some
 select session_variable.create_variable('varchar', 'varchar'::regtype, 'a varchar text'::varchar);
 select session_variable.create_constant('numeric const', 'numeric'::regtype, 123.45);
 select session_variable.create_variable('initially null', 'text'::regtype, null::text);
-select session_variable.create_variable('a_record', 'record'::regtype, ('some text', '2015-07-17'::date, 123.45::numeric));
+select session_variable.create_variable('a_record', 'record'::regtype, ('some text', '2015-07-17'::date, 123.45::numeric));  -- fails: pseudo type
 select session_variable.create_variable('int[][]', 'int[][]'::regtype, '{{1,2},{3,4},{5,6}}'::int[][]);
 
 select session_variable.create_variable('wrongdate', 'interval'::regtype, '2015-07-15'::date); -- fails: wrong datatype
@@ -53,7 +53,7 @@ select session_variable.get('numeric const', null::numeric);
 select session_variable.get('numeric const', null::date);                                  -- fails: wrong type
 select session_variable.get('int[][]', null::int[][]);
 select session_variable.get('initially null', null::text);
-select session_variable.get('a_record', null::record);
+select session_variable.get('a_record', null::record);                                     -- fails: not created because of pseudo type
 
 
 select session_variable.exists('int[][]');
@@ -67,7 +67,6 @@ select session_variable.set('an integer', 987654321);
 select session_variable.set('just text', 'a new bit of text'::text);
 select session_variable.set('varchar', 'an altered varchar text'::varchar);
 select session_variable.set('initially null', 'now filled'::text);
-select session_variable.set('a_record', null::record);
 
 select session_variable.set('numeric const', 223344);                                      -- fails: constants cannot be set
 select session_variable.set('does not exist', null::text);                                 -- fails: does not exist
@@ -78,7 +77,6 @@ select session_variable.get('just text', null::text);
 select session_variable.get('varchar', null::varchar);
 select session_variable.get('numeric const', null::numeric);
 select session_variable.set('initially null', null::text);
-select session_variable.get('a_record', null::record);
 
 select session_variable.init();
 
@@ -94,7 +92,6 @@ select session_variable.alter_value('an integer', 0);
 select session_variable.alter_value('just text', ''::text);
 select session_variable.alter_value('varchar', null::varchar);
 select session_variable.alter_value('numeric const', 3333333333333333333333.3333333333333);
-select session_variable.alter_value('a_record', (123, 456, 'altered text'));
 
 select session_variable.alter_value('does not exist', null::text);                         -- fails: does not exist
 select session_variable.alter_value('an integer', null::date);                             -- fails: wrong datatype
@@ -104,7 +101,6 @@ select session_variable.get('an integer', null::integer);
 select session_variable.get('just text', null::text);
 select session_variable.get('varchar', null::varchar);
 select session_variable.get('numeric const', null::numeric);
-select session_variable.get('a_record', null::record);
 
 select session_variable.set('an integer', 123.456::float);
 select session_variable.get('an integer', null::smallint);
@@ -117,18 +113,19 @@ select session_variable.set('varchar', 23.456::numeric);                        
 select session_variable.drop('some_date');
 select session_variable.drop('an integer');
 
+select session_variable.dump();
+select session_variable.dump(false);
+
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');               -- fails: has just been dropped
 select session_variable.get('an integer', null::integer);                                  -- fails: has just been dropped
 select session_variable.get('just text', null::text);
 select session_variable.get('varchar', null::varchar);
 select session_variable.get('numeric const', null::numeric);
-select session_variable.get('a_record', null::record);
 
 select session_variable.drop('just text');
 select session_variable.drop('varchar');
 select session_variable.drop('numeric const');
 select session_variable.drop('initially null');
-select session_variable.drop('a_record');
 select session_variable.drop('does not exist');                                            -- fails: does not exist
 
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');               -- fails: has just been dropped
@@ -136,7 +133,6 @@ select session_variable.get('an integer', null::integer);                       
 select session_variable.get('just text', null::text);                                      -- fails: has just been dropped
 select session_variable.get('varchar', null::varchar);                                     -- fails: has just been dropped
 select session_variable.get('numeric const', null::numeric);                               -- fails: has just been dropped
-select session_variable.get('a_record', null::record);                                     -- fails: has just been dropped
 
 -- cleanup
 drop schema if exists session_variable cascade;

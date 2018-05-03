@@ -26,7 +26,7 @@ select session_variable.init();
 select session_variable.get_session_variable_version();
  get_session_variable_version 
 ------------------------------
- 1.0.5
+ 2.0
 (1 row)
 
 select session_variable.get('does not exist', null::text);                                 -- fails: no variables exist
@@ -67,12 +67,8 @@ select session_variable.create_variable('initially null', 'text'::regtype, null:
  t
 (1 row)
 
-select session_variable.create_variable('a_record', 'record'::regtype, ('some text', '2015-07-17'::date, 123.45::numeric));
- create_variable 
------------------
- t
-(1 row)
-
+select session_variable.create_variable('a_record', 'record'::regtype, ('some text', '2015-07-17'::date, 123.45::numeric));  -- fails: pseudo type
+ERROR:  pseudo types are not supported: record
 select session_variable.create_variable('int[][]', 'int[][]'::regtype, '{{1,2},{3,4},{5,6}}'::int[][]);
  create_variable 
 -----------------
@@ -116,7 +112,7 @@ select session_variable.type_of('int[][]');
 select session_variable.type_of('does not exist');                                         -- fails: does not exist
 ERROR:  variable or constant 'does not exist' does not exists
 select session_variable.type_of(null);                                                     -- fails: variable_or_constan_name must be filled
-ERROR:  variable_or_constant_name must be filled
+ERROR:  variable or constant name must be filled
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
   to_char   
 ------------
@@ -161,12 +157,8 @@ select session_variable.get('initially null', null::text);
  
 (1 row)
 
-select session_variable.get('a_record', null::record);
-               get               
----------------------------------
- ("some text",07-17-2015,123.45)
-(1 row)
-
+select session_variable.get('a_record', null::record);                                     -- fails: not created because of pseudo type
+ERROR:  variable or constant 'a_record' does not exists
 select session_variable.exists('int[][]');
  exists 
 --------
@@ -192,39 +184,33 @@ select session_variable.drop('int[][]');
 (1 row)
 
 select session_variable.set('some_date', '2050-12-11'::date);
-    set     
-------------
- 07-15-2015
+ set 
+-----
+ t
 (1 row)
 
 select session_variable.set('an integer', 987654321);
-    set    
------------
- 123456789
+ set 
+-----
+ t
 (1 row)
 
 select session_variable.set('just text', 'a new bit of text'::text);
-      set       
-----------------
- just some text
+ set 
+-----
+ t
 (1 row)
 
 select session_variable.set('varchar', 'an altered varchar text'::varchar);
-      set       
-----------------
- a varchar text
+ set 
+-----
+ t
 (1 row)
 
 select session_variable.set('initially null', 'now filled'::text);
  set 
 -----
- 
-(1 row)
-
-select session_variable.set('a_record', null::record);
-               set               
----------------------------------
- ("some text",07-17-2015,123.45)
+ t
 (1 row)
 
 select session_variable.set('numeric const', 223344);                                      -- fails: constants cannot be set
@@ -262,21 +248,15 @@ select session_variable.get('numeric const', null::numeric);
 (1 row)
 
 select session_variable.set('initially null', null::text);
-    set     
-------------
- now filled
-(1 row)
-
-select session_variable.get('a_record', null::record);
- get 
+ set 
 -----
- 
+ t
 (1 row)
 
 select session_variable.init();
  init 
 ------
-    7
+    6
 (1 row)
 
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
@@ -306,7 +286,7 @@ select session_variable.get('varchar', null::varchar);
 select session_variable.set('initially null', null::text);
  set 
 -----
- 
+ t
 (1 row)
 
 select session_variable.get('numeric const', null::numeric);
@@ -318,43 +298,41 @@ select session_variable.get('numeric const', null::numeric);
 select session_variable.alter_value('some_date', '1900-01-01'::date);
  alter_value 
 -------------
- 07-15-2015
+ t
 (1 row)
 
 select session_variable.alter_value('an integer', 0);
  alter_value 
 -------------
-   123456789
+ t
 (1 row)
 
 select session_variable.alter_value('just text', ''::text);
-  alter_value   
-----------------
- just some text
+ alter_value 
+-------------
+ t
 (1 row)
 
 select session_variable.alter_value('varchar', null::varchar);
-  alter_value   
-----------------
- a varchar text
+ alter_value 
+-------------
+ t
 (1 row)
 
 select session_variable.alter_value('numeric const', 3333333333333333333333.3333333333333);
  alter_value 
 -------------
-      123.45
-(1 row)
-
-select session_variable.alter_value('a_record', (123, 456, 'altered text'));
-           alter_value           
----------------------------------
- ("some text",07-17-2015,123.45)
+ t
 (1 row)
 
 select session_variable.alter_value('does not exist', null::text);                         -- fails: does not exist
 ERROR:  Variable "does not exist" does not exists
 select session_variable.alter_value('an integer', null::date);                             -- fails: wrong datatype
-ERROR:  The variable's internal type integer, cannot be cast to type date
+ alter_value 
+-------------
+ t
+(1 row)
+
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
   to_char   
 ------------
@@ -364,7 +342,7 @@ select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
 select session_variable.get('an integer', null::integer);
  get 
 -----
-   0
+    
 (1 row)
 
 select session_variable.get('just text', null::text);
@@ -385,16 +363,10 @@ select session_variable.get('numeric const', null::numeric);
  3333333333333333333333.3333333333333
 (1 row)
 
-select session_variable.get('a_record', null::record);
-           get            
---------------------------
- (123,456,"altered text")
-(1 row)
-
 select session_variable.set('an integer', 123.456::float);
  set 
 -----
-   0
+ t
 (1 row)
 
 select session_variable.get('an integer', null::smallint);
@@ -406,7 +378,7 @@ select session_variable.get('an integer', null::smallint);
 select session_variable.set('varchar', '2018-03-15'::date);
  set 
 -----
- 
+ t
 (1 row)
 
 select session_variable.get('varchar', null::char);
@@ -416,13 +388,17 @@ select session_variable.get('varchar', null::char);
 (1 row)
 
 select session_variable.set('varchar', '12345'::text);
-    set     
-------------
- 03-15-2018
+ set 
+-----
+ t
 (1 row)
 
 select session_variable.set('varchar', 23.456::numeric);                                   -- fails: the result cannot be cast from varchar to numeric
-ERROR:  The variable's internal type character varying, cannot be cast to type numeric
+ set 
+-----
+ t
+(1 row)
+
 select session_variable.drop('some_date');
  drop 
 ------
@@ -435,6 +411,27 @@ select session_variable.drop('an integer');
  t
 (1 row)
 
+select session_variable.dump();
+                                                                         dump                                                                         
+------------------------------------------------------------------------------------------------------------------------------------------------------
+ truncate table session_variable.variables;
+ select session_variable.init();
+ select session_variable.create_variable('initially null', 'pg_catalog.text'::regtype, NULL::pg_catalog.text);
+ select session_variable.create_variable('just text', 'pg_catalog.text'::regtype, ''::pg_catalog.text);
+ select session_variable.create_constant('numeric const', 'pg_catalog.numeric'::regtype, '3333333333333333333333.3333333333333'::pg_catalog.numeric);
+ select session_variable.create_variable('varchar', 'pg_catalog.varchar'::regtype, NULL::pg_catalog.varchar);
+(6 rows)
+
+select session_variable.dump(false);
+                                                                                                  dump                                                                                                   
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ select session_variable.init();
+ select session_variable.create_variable('initially null', 'pg_catalog.text'::regtype, NULL::pg_catalog.text) where not session_variable.exists('initially null');
+ select session_variable.create_variable('just text', 'pg_catalog.text'::regtype, ''::pg_catalog.text) where not session_variable.exists('just text');
+ select session_variable.create_constant('numeric const', 'pg_catalog.numeric'::regtype, '3333333333333333333333.3333333333333'::pg_catalog.numeric) where not session_variable.exists('numeric const');
+ select session_variable.create_variable('varchar', 'pg_catalog.varchar'::regtype, NULL::pg_catalog.varchar) where not session_variable.exists('varchar');
+(5 rows)
+
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');               -- fails: has just been dropped
 ERROR:  variable or constant 'some_date' does not exists
 select session_variable.get('an integer', null::integer);                                  -- fails: has just been dropped
@@ -446,21 +443,15 @@ select session_variable.get('just text', null::text);
 (1 row)
 
 select session_variable.get('varchar', null::varchar);
-  get  
--------
- 12345
+  get   
+--------
+ 23.456
 (1 row)
 
 select session_variable.get('numeric const', null::numeric);
                  get                  
 --------------------------------------
  3333333333333333333333.3333333333333
-(1 row)
-
-select session_variable.get('a_record', null::record);
-           get            
---------------------------
- (123,456,"altered text")
 (1 row)
 
 select session_variable.drop('just text');
@@ -487,12 +478,6 @@ select session_variable.drop('initially null');
  t
 (1 row)
 
-select session_variable.drop('a_record');
- drop 
-------
- t
-(1 row)
-
 select session_variable.drop('does not exist');                                            -- fails: does not exist
 ERROR:  variable or constant "does not exist" does not exists
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');               -- fails: has just been dropped
@@ -505,8 +490,6 @@ select session_variable.get('varchar', null::varchar);                          
 ERROR:  variable or constant 'varchar' does not exists
 select session_variable.get('numeric const', null::numeric);                               -- fails: has just been dropped
 ERROR:  variable or constant 'numeric const' does not exists
-select session_variable.get('a_record', null::record);                                     -- fails: has just been dropped
-ERROR:  variable or constant 'a_record' does not exists
 -- cleanup
 drop schema if exists session_variable cascade;
 NOTICE:  drop cascades to extension session_variable

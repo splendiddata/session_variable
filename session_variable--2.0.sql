@@ -49,7 +49,7 @@ create table if not exists variables
 ,  is_constant                  boolean       not null
 ,  variable_type_namespace      name          not null
 ,  variable_type_name           name          not null
-,  initial_value                bytea
+,  initial_value                text
 );
 select pg_catalog.pg_extension_config_dump('variables', '');
 comment on table variables is 'holds constant values and the initial values of session variables';
@@ -142,7 +142,7 @@ grant execute on function create_constant
 create or replace function alter_value
     (   variable_or_constant_name   text
     ,   variable_or_constant_value  anyelement
-    ) returns anyelement
+    ) returns boolean
     as 'session_variable.so', 'alter_value' language C security definer;
 comment on function alter_value
     (   variable_or_constant_name   text
@@ -179,7 +179,7 @@ grant execute on function get
     to session_variable_user_role;
 
 create or replace function set(variable_name text, new_value anyelement)
-    returns anyelement 
+    returns boolean 
     as 'session_variable.so', 'set' language C security definer cost 2;
 comment on function set(variable_name text, new_value anyelement) is
     'Update the value of a session variable. The changed value will be visible in the curent session only';
@@ -226,12 +226,32 @@ comment on function get_session_variable_version() is
     'Reurns the version of the session_variable database extension';
 grant execute on function get_session_variable_version() 
     to session_variable_user_role;
-
+    
 create or replace function session_variable.dump(do_truncate boolean default true)
   returns setof text AS
 $$
 declare
-    var_cursor cursor is select * from session_variable.variables order by variable_name;
+    var_cursor cursor is 
+        select variable_name
+			 , is_constant
+			 , var.variable_type_namespace
+			   || '.'
+			   || case
+			      when etyp.typname is not null
+			       and typ.typname ~ ('^_+' || etyp.typname || '$')
+			       then etyp.typname || '[]'
+			      else typ.typname 
+			      end type_name
+			 , initial_value  
+        from session_variable.variables var
+		join pg_catalog.pg_namespace nsp 
+		    on var.variable_type_namespace = nsp.nspname 
+        join pg_catalog.pg_type typ 
+            on typ.typnamespace = nsp.oid
+            and var.variable_type_name = typ.typname
+	    left join pg_catalog.pg_type etyp
+	        on typ.typelem = etyp.oid 
+        order by variable_name;
     var_rec record;
     sql     text;
     var_content text;
@@ -242,32 +262,20 @@ begin
     end if;
     return next 'select session_variable.init();';
     for var_rec in var_cursor loop
-        sql = format ( 'select session_variable.get(%L, null::%s)::text'
-                     , var_rec.variable_name
-                     , format ( '%I.%I'
-                              , var_rec.variable_type_namespace
-                              , var_rec.variable_type_name
-                              )
-                     );
-        execute sql into var_content;
         return next format ( 'select session_variable.create_'
                               || case var_rec.is_constant 
                                  when true then 'constant' 
                                  else 'variable'
                                  end
-                              || '(%L, %L::regtype, %L::%I.%I)'
+                              || '(%L, %L::regtype, %L::%s)'
                               || case 
                                  when do_truncate then ';'
                                  else ' where not session_variable.exists(%L);'
                                  end
                            , var_rec.variable_name
-                           , format ( '%I.%I'
-                                    , var_rec.variable_type_namespace
-                                    , var_rec.variable_type_name
-                                    )
-                           , var_content
-                           , var_rec.variable_type_namespace
-                           , var_rec.variable_type_name
+                           , var_rec.type_name
+                           , var_rec.initial_value
+                           , var_rec.type_name
                            , var_rec.variable_name
                            );
     end loop;

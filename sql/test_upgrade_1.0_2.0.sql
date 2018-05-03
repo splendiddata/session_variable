@@ -17,43 +17,39 @@
 
 -- init
 create schema schema_1;
-create schema schema_2;
-create extension session_variable;
+create extension session_variable version '1.0';
 select session_variable.init();
 
 create type schema_1.my_type as 
 ( text_field text
 , int_field int
 );
-create type schema_2.my_type as 
-( int_field int
-, float_field float
-, varchar_field varchar(25)
-);
+create domain schema_1.my_domain as schema_1.my_type[];
 
 select session_variable.create_variable('schema_1.my_var', 'schema_1.my_type'::regtype, '("some text", 2)'::schema_1.my_type);
-select session_variable.create_variable('schema_2.my_var', 'schema_2.my_type'::regtype, '(223344, 2.5, "text in varchar")'::schema_2.my_type);
+select session_variable.create_variable('schema_1.my_var[]', 'schema_1.my_type[]'::regtype, array['("element1", 1)'::schema_1.my_type,'("element2", 2)'::schema_1.my_type]);
 select session_variable.create_variable('initially null', 'schema_1.my_type'::regtype);
+select session_variable.create_variable('schema_1.my_domain', 'schema_1.my_domain'::regtype, array['("element 1", 123)'::schema_1.my_type,'("element 2,2", 234)'::schema_1.my_type]::schema_1.my_domain);
+select session_variable.create_variable('int[]', 'int[]'::regtype, array[[1,2],[3,4],[5,5]]);
 
 select session_variable.get('schema_1.my_var', null::schema_1.my_type);
-select session_variable.get('schema_2.my_var', null::schema_2.my_type);
+select session_variable.get('schema_1.my_var[]', null::schema_1.my_type[]);
 select session_variable.get('initially null', null::schema_1.my_type);
-select session_variable.get('initially null', null::schema_2.my_type);                      -- fails: wrong type
+select session_variable.get('schema_1.my_domain', null::schema_1.my_domain);
+select session_variable.get('int[]', null::int[]);
 
-select session_variable.type_of('schema_1.my_var');
-select session_variable.type_of('schema_2.my_var');
-select session_variable.type_of('initially null');
-
-select session_variable.set('initially null', session_variable.get('schema_1.my_var', null::schema_1.my_type));
-select session_variable.set('schema_1.my_var', null::schema_1.my_type);
-
-select session_variable.get('schema_1.my_var', null::schema_1.my_type);
-select session_variable.get('schema_2.my_var', null::schema_2.my_type);
-select session_variable.get('initially null', null::schema_1.my_type);
+select session_variable.set('int[]', array[1,2,3]);
 
 select session_variable.dump();
+
+alter extension session_variable update;
+
+select variable_name, initial_value from session_variable.variables order by variable_name;
+
+select session_variable.dump();
+
+select session_variable.set('int[]', array[1,2,3]);
 
 -- cleanup
 drop schema if exists session_variable cascade;
 drop schema if exists schema_1 cascade;
-drop schema if exists schema_2 cascade;
