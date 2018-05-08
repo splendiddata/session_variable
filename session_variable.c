@@ -40,6 +40,7 @@ PG_MODULE_MAGIC
 
 static bool virgin = true;
 static SessionVariable* variables = NULL;
+static bool pgInitInvoked = false;
 
 /*
  * function prototypes
@@ -85,6 +86,11 @@ void _PG_init()
 			"select extversion from pg_extension where extname = 'session_variable'";
 	Portal cursor;
 	char* installedVersion;
+
+	if (IsBackgroundWorker || pgInitInvoked) {
+		return;
+	}
+	pgInitInvoked = true;
 
 	/*
 	 * Read the session_variable.variables table and update each row to
