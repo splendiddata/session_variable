@@ -60,8 +60,8 @@ $body$
 begin
     new.created_timestamp = current_timestamp;
     new.last_updated_timestamp = current_timestamp;
-    new.created_by = current_user;
-    new.last_updated_by = current_user;
+    new.created_by = session_user;
+    new.last_updated_by = session_user;
     return new;
 end;
 $body$
@@ -77,7 +77,7 @@ returns trigger as
 $body$
 begin
     new.last_updated_timestamp = current_timestamp;
-    new.last_updated_by = current_user;
+    new.last_updated_by = session_user;
     return new;
 end;
 $body$

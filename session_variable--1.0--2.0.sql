@@ -127,3 +127,33 @@ begin
     end loop;
 end;
 $$ language plpgsql;
+
+/*
+ * Make created_by and last_updated_by reflect the session_user, not the
+ * current_user 
+ */
+create or replace function variables_bi()
+returns trigger as
+$body$
+begin
+    new.created_timestamp = current_timestamp;
+    new.last_updated_timestamp = current_timestamp;
+    new.created_by = session_user;
+    new.last_updated_by = session_user;
+    return new;
+end;
+$body$
+language plpgsql
+security definer;
+
+create or replace function variables_bu()
+returns trigger as
+$body$
+begin
+    new.last_updated_timestamp = current_timestamp;
+    new.last_updated_by = session_user;
+    return new;
+end;
+$body$
+language plpgsql
+security definer;
