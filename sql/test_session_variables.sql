@@ -27,6 +27,7 @@ select session_variable.get('does not exist', null::text);                      
 
 select session_variable.create_variable('some_date', 'date'::regtype, '2015-07-15'::date);
 select session_variable.create_variable('an integer', 'integer'::regtype, 123456789);
+select session_variable.create_variable('integer_initially_zero', 'integer'::regtype, 0);
 select session_variable.create_variable('just text', 'text'::regtype, 'just some text'::text);
 select session_variable.create_variable('varchar', 'varchar'::regtype, 'a varchar text'::varchar);
 select session_variable.create_constant('numeric const', 'numeric'::regtype, 123.45);
@@ -82,6 +83,7 @@ select session_variable.init();
 
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
 select session_variable.get('an integer', null::integer);
+select session_variable.get('integer_initially_zero', null::integer);
 select session_variable.get('just text', null::text);
 select session_variable.get('varchar', null::varchar);
 select session_variable.set('initially null', null::text);

@@ -19,7 +19,7 @@
 #define SESSION_VARIABLE_H
 
 
-static char* sessionVariableVersion = "2.0.2";
+static char* sessionVariableVersion = "2.0.3";
 
 /*
  * Loads the session variables from the session_variable.variables table

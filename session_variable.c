@@ -616,14 +616,6 @@ int reload()
 			detoastedValue = (Datum) PG_DETOAST_DATUM(rawValue);
 
 			value = deserialize(variableName, valueType, detoastedValue);
-			if (!value)
-			{
-				/*
-				 * Something went wrong - forget about this variable
-				 */
-				SPI_cursor_fetch(cursor, true, 1);
-				continue;
-			}
 
 			/*
 			 * we want the value to be malloced instead of palloced.

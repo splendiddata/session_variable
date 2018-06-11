@@ -26,7 +26,7 @@ select session_variable.init();
 select session_variable.get_session_variable_version();
  get_session_variable_version 
 ------------------------------
- 2.0.2
+ 2.0.3
 (1 row)
 
 select session_variable.get('does not exist', null::text);                                 -- fails: no variables exist
@@ -38,6 +38,12 @@ select session_variable.create_variable('some_date', 'date'::regtype, '2015-07-1
 (1 row)
 
 select session_variable.create_variable('an integer', 'integer'::regtype, 123456789);
+ create_variable 
+-----------------
+ t
+(1 row)
+
+select session_variable.create_variable('integer_initially_zero', 'integer'::regtype, 0);
  create_variable 
 -----------------
  t
@@ -256,7 +262,7 @@ select session_variable.set('initially null', null::text);
 select session_variable.init();
  init 
 ------
-    6
+    7
 (1 row)
 
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
@@ -269,6 +275,12 @@ select session_variable.get('an integer', null::integer);
     get    
 -----------
  123456789
+(1 row)
+
+select session_variable.get('integer_initially_zero', null::integer);
+ get 
+-----
+   0
 (1 row)
 
 select session_variable.get('just text', null::text);
@@ -417,20 +429,22 @@ select session_variable.dump();
  truncate table session_variable.variables;
  select session_variable.init();
  select session_variable.create_variable('initially null', 'pg_catalog.text'::regtype, NULL::pg_catalog.text);
+ select session_variable.create_variable('integer_initially_zero', 'pg_catalog.int4'::regtype, '0'::pg_catalog.int4);
  select session_variable.create_variable('just text', 'pg_catalog.text'::regtype, ''::pg_catalog.text);
  select session_variable.create_constant('numeric const', 'pg_catalog.numeric'::regtype, '3333333333333333333333.3333333333333'::pg_catalog.numeric);
  select session_variable.create_variable('varchar', 'pg_catalog.varchar'::regtype, NULL::pg_catalog.varchar);
-(6 rows)
+(7 rows)
 
 select session_variable.dump(false);
                                                                                                   dump                                                                                                   
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  select session_variable.init();
  select session_variable.create_variable('initially null', 'pg_catalog.text'::regtype, NULL::pg_catalog.text) where not session_variable.exists('initially null');
+ select session_variable.create_variable('integer_initially_zero', 'pg_catalog.int4'::regtype, '0'::pg_catalog.int4) where not session_variable.exists('integer_initially_zero');
  select session_variable.create_variable('just text', 'pg_catalog.text'::regtype, ''::pg_catalog.text) where not session_variable.exists('just text');
  select session_variable.create_constant('numeric const', 'pg_catalog.numeric'::regtype, '3333333333333333333333.3333333333333'::pg_catalog.numeric) where not session_variable.exists('numeric const');
  select session_variable.create_variable('varchar', 'pg_catalog.varchar'::regtype, NULL::pg_catalog.varchar) where not session_variable.exists('varchar');
-(5 rows)
+(6 rows)
 
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');               -- fails: has just been dropped
 ERROR:  variable or constant 'some_date' does not exists
