@@ -216,8 +216,6 @@ create or replace function init()
     as 'session_variable.so', 'init' language C security definer;
 comment on function init() is 
     'Reloads all constants and session variables from the variables table, thus reverting all local changes';
-grant execute on function init() 
-    to public;
 
 create or replace function get_session_variable_version()
     returns varchar
@@ -287,3 +285,4 @@ grant execute on function dump(do_truncate boolean)
     to session_variable_administrator_role;
     
 revoke all on all functions in schema session_variable from public;
+grant execute on function init() to public;

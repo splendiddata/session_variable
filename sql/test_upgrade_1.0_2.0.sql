@@ -31,18 +31,44 @@ select session_variable.create_variable('schema_1.my_var[]', 'schema_1.my_type[]
 select session_variable.create_variable('initially null', 'schema_1.my_type'::regtype);
 select session_variable.create_variable('schema_1.my_domain', 'schema_1.my_domain'::regtype, array['("element 1", 123)'::schema_1.my_type,'("element 2,2", 234)'::schema_1.my_type]::schema_1.my_domain);
 select session_variable.create_variable('int[]', 'int[]'::regtype, array[[1,2],[3,4],[5,5]]);
+select session_variable.create_variable('just_text', 'text'::regtype, 'just some text'::text);
+select session_variable.create_variable('just_int', 'int'::regtype, 0);
+select session_variable.create_variable('just_smallint', 'smallint'::regtype, 123);
 
 select session_variable.get('schema_1.my_var', null::schema_1.my_type);
 select session_variable.get('schema_1.my_var[]', null::schema_1.my_type[]);
 select session_variable.get('initially null', null::schema_1.my_type);
 select session_variable.get('schema_1.my_domain', null::schema_1.my_domain);
 select session_variable.get('int[]', null::int[]);
+select session_variable.get('just_text', null::varchar);
+select session_variable.get('just_int', 15);
+select session_variable.get('just_smallint', null::smallint);
+
+select session_variable.init();
+
+select session_variable.get('schema_1.my_var', null::schema_1.my_type);
+select session_variable.get('schema_1.my_var[]', null::schema_1.my_type[]);
+select session_variable.get('initially null', null::schema_1.my_type);
+select session_variable.get('schema_1.my_domain', null::schema_1.my_domain);
+select session_variable.get('int[]', null::int[]);
+select session_variable.get('just_text', null::varchar);
+select session_variable.get('just_int', 15);
+select session_variable.get('just_smallint', null::smallint);
 
 select session_variable.set('int[]', array[1,2,3]);
 
 select session_variable.dump();
 
 alter extension session_variable update;
+
+select session_variable.get('schema_1.my_var', null::schema_1.my_type);
+select session_variable.get('schema_1.my_var[]', null::schema_1.my_type[]);
+select session_variable.get('initially null', null::schema_1.my_type);
+select session_variable.get('schema_1.my_domain', null::schema_1.my_domain);
+select session_variable.get('int[]', null::int[]);
+select session_variable.get('just_text', null::varchar);
+select session_variable.get('just_int', 15);
+select session_variable.get('just_smallint', null::smallint);
 
 select variable_name, initial_value from session_variable.variables order by variable_name;
 

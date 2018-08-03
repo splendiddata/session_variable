@@ -821,7 +821,7 @@ session_variable.init() function.
     session_variable.get_session_variable_version()
   </h3>
   <p>
-    Returns the code version of the extension, currently '2.0.3'. 
+    Returns the code version of the extension, currently '2.0.4'. 
   </p>
   <table class="arguments">
     <tr>

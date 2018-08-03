@@ -478,6 +478,14 @@ Datum deserializeV1(text* varName, Oid dataType, Datum detoastedValue)
 	int typeLength = getTypeLength(dataType);
 
 	value = (Datum) VARDATA(detoastedValue);
+
+	if (typeLength > 0 && typeLength <= SIZEOF_DATUM)
+	{
+		Datum tmp;
+		memcpy(&tmp, (void*) value, SIZEOF_DATUM);
+		value = tmp;
+	}
+
 	if ((typeLength < 0 && VARSIZE(detoastedValue) - VARHDRSZ != VARSIZE(value))
 			|| (typeLength > 0 && typeLength <= SIZEOF_DATUM
 					&& VARSIZE(detoastedValue) - VARHDRSZ != SIZEOF_DATUM)
