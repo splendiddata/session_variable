@@ -23,6 +23,7 @@
 #include "executor/spi.h"
 #include "funcapi.h"
 #include "miscadmin.h"
+#include "commands/dbcommands.h"
 #include "storage/fd.h"
 #include <sys/stat.h>
 #include "utils/builtins.h"
@@ -41,6 +42,7 @@ PG_MODULE_MAGIC
 static bool virgin = true;
 static SessionVariable* variables = NULL;
 static bool pgInitInvoked = false;
+static bool isExecutingInitialisationFunction = false;
 
 /*
  * function prototypes
@@ -58,6 +60,7 @@ Datum deserializeV1(text* varName, Oid dataType, Datum detoastedValue);
 Datum deserializeV2(text* varName, Oid dataType, Datum detoastedValue);
 int getTypeLength(Oid typeOid);
 bool insertVariable(SessionVariable* variable);
+void invokeInitialisationFunction(void);
 void logVariable(int logLevel, char* leadingText, SessionVariable* variable);
 int reload(void);
 void removeVariableRecursively(SessionVariable* v);
@@ -87,7 +90,8 @@ void _PG_init()
 	Portal cursor;
 	char* installedVersion;
 
-	if (IsBackgroundWorker || pgInitInvoked) {
+	if (IsBackgroundWorker || pgInitInvoked)
+	{
 		return;
 	}
 	pgInitInvoked = true;
@@ -333,6 +337,13 @@ Datum coerceOutput(Oid internalType, int internalTypeLength, Datum internalData,
 	}
 }
 
+/*
+ * Writes the peculiarities of one variable to the log for debugging purposes
+ *
+ * @param int logLevel The log level
+ * @param char* leadingText Some text to indicate why the variable is logged
+ * @param SessionVariable* variable The variable to log
+ */
 void logVariable(int logLevel, char* leadingText, SessionVariable* variable)
 {
 	if (variable == NULL)
@@ -397,7 +408,8 @@ SessionVariable* createVariable(text* variableName, bool isConst, Oid valueType,
 	SessionVariable* result = (SessionVariable*) malloc(
 			sizeof(SessionVariable));
 
-	elog(DEBUG3,
+	elog(
+			DEBUG3,
 			"createVariable(%s, isConst=%d, valueType=%d, typeLength=%d, isNull=%d, value)",
 			text_to_cstring(variableName), isConst, valueType, typeLength,
 			isNull);
@@ -481,6 +493,10 @@ Datum deserializeV1(text* varName, Oid dataType, Datum detoastedValue)
 
 	if (typeLength > 0 && typeLength <= SIZEOF_DATUM)
 	{
+		/*
+		 * For fixed length types of 8 bytes or shorter, the VARDATA is the
+		 * Datum we are looking for - not a reference. So take it as value.
+		 */
 		Datum tmp;
 		memcpy(&tmp, (void*) value, SIZEOF_DATUM);
 		value = tmp;
@@ -497,12 +513,14 @@ Datum deserializeV1(text* varName, Oid dataType, Datum detoastedValue)
 		 * So the size of the content must match the content size of the wrapping bytea (= VARSIZE - VARHDRSZ).
 		 * If this is not the case, someone has manually altered the content.
 		 */
-		elog(LOG,
+		elog(
+				LOG,
 				"Someone has been messing with variable '%s', expected length=%d, actual length = %d",
 				text_to_cstring(varName),
 				typeLength < 0 ? VARSIZE(value) : typeLength < SIZEOF_DATUM ? SIZEOF_DATUM : typeLength,
 				VARSIZE(detoastedValue) - VARHDRSZ);
-		elog(NOTICE,
+		elog(
+				NOTICE,
 				"Session variable '%s' is incorrectly stored in the session_variable.variables table",
 				text_to_cstring(varName));
 		return (Datum) NULL;
@@ -592,7 +610,7 @@ int reload()
 	variables = NULL;
 	virgin = false;
 
-	elog(LOG, "execute query: %s", sql);
+	elog(DEBUG3, "execute query: %s", sql);
 
 	SPI_connect();
 
@@ -649,8 +667,75 @@ int reload()
 
 	buildBTree();
 
+	invokeInitialisationFunction();
+
 	elog(DEBUG3, "reload() = %d", nrVariables);
 	return nrVariables;
+}
+
+/*
+ * Checks if a no-argument function called session_variable.initialze_variables()
+ * exists and, if so, invokes it.
+ */
+void invokeInitialisationFunction()
+{
+	Oid namespaceOid;
+	char* dbName;
+
+	dbName = get_database_name(MyDatabaseId);
+	namespaceOid = get_namespace_oid("session_variable", true);
+	if (OidIsValid(namespaceOid))
+	{
+		/*
+		 * Check if a no-argument function called "session_variable_initialisation" exists in namespace
+		 * "session_variable"
+		 */
+		oidvector* emptyArgVector = buildoidvector(NULL, 0);
+		if (SearchSysCacheExists3(PROCNAMEARGSNSP,
+				CStringGetDatum("variable_initialisation"),
+				PointerGetDatum(buildoidvector(NULL, 0)),
+				ObjectIdGetDatum(namespaceOid)))
+		{
+
+			SPI_connect();
+
+			elog(
+					DEBUG3,
+					"login_hook will execute select session_variable.variable_initialisation() in database %s",
+					dbName);
+			isExecutingInitialisationFunction = true;
+			SPI_execute("select session_variable.variable_initialisation()",
+					false, 1);
+			isExecutingInitialisationFunction = false;
+			elog(
+					DEBUG3,
+					"login_hook is back from select session_variable.variable_initialisation() in database %s",
+					dbName);
+
+			SPI_finish();
+		}
+		else
+		{
+			elog(
+					DEBUG1,
+					"Function session_variable.variable_initialisation() is not invoked because it does not exist in database %s",
+					dbName);
+		}
+
+		pfree(emptyArgVector);
+	}
+}
+
+/*
+ * function session_variable.is_executing_variable_initialisation() returns boolean.
+ *
+ * This function returns true if the session_variable.variable_initialisation() function is executing
+ * under control of the session_variable code.
+ */
+PG_FUNCTION_INFO_V1(is_executing_variable_initialisation);
+Datum is_executing_variable_initialisation( PG_FUNCTION_ARGS)
+{
+	PG_RETURN_BOOL(isExecutingInitialisationFunction);
 }
 
 /*
@@ -1848,7 +1933,7 @@ Datum is_constant( PG_FUNCTION_ARGS)
 	}
 
 	elog(DEBUG1, "@<is_constant('%s') = %d", variableName,
-			variable->isConstant);
+	variable->isConstant);
 
 	PG_RETURN_BOOL(variable->isConstant);
 }

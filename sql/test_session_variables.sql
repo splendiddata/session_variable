@@ -124,6 +124,24 @@ select session_variable.get('just text', null::text);
 select session_variable.get('varchar', null::varchar);
 select session_variable.get('numeric const', null::numeric);
 
+create or replace function session_variable.variable_initialisation()
+   returns void language plpgsql as $$
+begin
+	if session_variable.is_executing_variable_initialisation()
+	then
+	    raise notice 'executing session_variable.variable_initialisation() on behalf of session_variable initialisation code';
+	else
+	    raise notice 'executing session_variable.variable_initialisation() on its own account';
+	end if;
+end;
+$$; 
+
+select session_variable.variable_initialisation();
+select session_variable.init();
+
+drop function session_variable.variable_initialisation();
+select session_variable.init();
+
 select session_variable.drop('just text');
 select session_variable.drop('varchar');
 select session_variable.drop('numeric const');

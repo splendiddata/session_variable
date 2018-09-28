@@ -821,7 +821,7 @@ session_variable.init() function.
     session_variable.get_session_variable_version()
   </h3>
   <p>
-    Returns the code version of the extension, currently '2.0.4'. 
+    Returns the code version of the extension, currently '2.1.0'. 
   </p>
   <table class="arguments">
     <tr>
@@ -850,6 +850,102 @@ session_variable.init() function.
     Example:<br>
     <code>select session_variable.get_session_variable_version();</code>
   </p>
+
+  <h3>
+    session_variable.is_executing_variable_initialisation()
+  </h3>
+  <p>
+    Returns true if a user-provided function called session_variable.variable_initialisation()
+    is currently being invoked on behalf of session_variable initialisation. Thus the
+    session_variable.variable_initialisation() function can check if it not illegally
+    invoked outside session_variable initialisation code.
+  </p>
+  <table class="arguments">
+    <tr>
+      <th align="left" colspan="3">arguments</th>
+    </tr>
+    <tr>
+      <td colspan="3">none</td>
+    </tr>
+    <tr>
+      <th align="left" colspan="3">Returns</th>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>boolean</td>
+      <td>true if a function called session_variable.variable_initialisation() 
+        is currently being invoked on behalf of session_vairable initialisation
+        code. In all other cases the return will be false.</td>
+    </tr>
+    <tr>
+      <th align="left" colspan="3">Exceptions</th>
+    </tr>
+    <tr>
+      <td colspan="3">none</td>
+    </tr>
+  </table>
+
+  <h3>
+    session_variable.variable_initialisation()
+  </h3>
+  <p>
+    This function is NOT provided by the database extension, but might be created
+    by you! 
+  </p>
+  <p>
+    If the function exists, it will be invoked by the session_variable initialisation
+    code just after all values with their default values are loaded from the
+    session_variable.variables table, but before any other action takes place.
+  </p>
+  <table class="arguments">
+    <tr>
+      <th align="left" colspan="3">arguments</th>
+    </tr>
+    <tr>
+      <td colspan="3">none</td>
+    </tr>
+    <tr>
+      <th align="left" colspan="3">Returns</th>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>void</td>
+      <td>Or anything you like. The result will be ignored by session_variable
+      initialisation code</td>
+    </tr>
+    <tr>
+      <th align="left" colspan="3">Exceptions</th>
+    </tr>
+    <tr>
+      <td colspan="3">Make sure you don't throw any!</td>
+    </tr>
+  </table>
+  <p>
+    Example:
+  </p>
+  
+```
+create or replace function session_variable.variable_initialisation()
+   returns void
+   language plpgsql
+   as $$
+begin
+   if not session_variable.is_executing_variable_initialisation()
+   then
+       raise sqlstate '55099' using message =
+          'This function can only be invoked as part of session_variable initialisation';
+   end if;
+   perform session_variable.set('headline_of_the_day',
+      'we have nice weather today'::varchar);
+exception
+   when sqlstate '55099' then
+      raise;
+  when others then
+     raise log 'error occurred in session_variable.variable_initialisation(), sqlstate=%, sqlerrm=%',
+               sqlstate, sqlerrm;
+end;
+$$;
+```
 
 <h2>Security</h2>
 <p>

@@ -225,6 +225,12 @@ comment on function get_session_variable_version() is
 grant execute on function get_session_variable_version() 
     to session_variable_user_role;
 
+create or replace function is_executing_variable_initialisation()
+    returns boolean
+    as 'session_variable.so', 'is_executing_variable_initialisation' language C security definer cost 1;
+comment on function is_executing_variable_initialisation() is 
+    'Reurns true if a function called session_variable.variable_initialisation() currently being invoked on behalf of session_variable initialisation code';
+
 create or replace function session_variable.dump(do_truncate boolean default true)
   returns setof text AS
 $$
@@ -278,3 +284,5 @@ grant execute on function dump(do_truncate boolean)
     
 revoke all on all functions in schema session_variable from public;
 grant execute on function init() to public;
+grant execute on function is_executing_variable_initialisation() 
+    to public;
