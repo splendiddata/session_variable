@@ -705,7 +705,7 @@ void invokeInitialisationFunction()
 					dbName);
 			isExecutingInitialisationFunction = true;
 			SPI_execute("select session_variable.variable_initialisation()",
-					false, 1);
+			false, 1);
 			isExecutingInitialisationFunction = false;
 			elog(
 					DEBUG3,
@@ -1609,7 +1609,7 @@ Datum set( PG_FUNCTION_ARGS)
 		;
 	}
 
-	if (variable->isConstant)
+	if (variable->isConstant && !isExecutingInitialisationFunction) // the initialisation function is allowed to alter the value of a constant
 	{
 		ereport(ERROR,
 				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),(errmsg("constant \"%s\" cannot be set", variableName))));

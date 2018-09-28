@@ -130,17 +130,21 @@ begin
 	if session_variable.is_executing_variable_initialisation()
 	then
 	    raise notice 'executing session_variable.variable_initialisation() on behalf of session_variable initialisation code';
+	    select session_variable.set('numeric const', 223344);                              -- setting a constant should succeed now  
 	else
 	    raise notice 'executing session_variable.variable_initialisation() on its own account';
 	end if;
 end;
 $$; 
-
+select session_variable.get('numeric const', null::numeric);
 select session_variable.variable_initialisation();
+select session_variable.get('numeric const', null::numeric);
 select session_variable.init();
+select session_variable.get('numeric const', null::numeric);
 
 drop function session_variable.variable_initialisation();
 select session_variable.init();
+select session_variable.get('numeric const', null::numeric);
 
 select session_variable.drop('just text');
 select session_variable.drop('varchar');

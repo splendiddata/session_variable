@@ -897,6 +897,11 @@ session_variable.init() function.
     code just after all values with their default values are loaded from the
     session_variable.variables table, but before any other action takes place.
   </p>
+  <p>
+    During the execution for the session_variable.variable_initialisation() function
+    on behalf of session variable initialisation, also values of constants can
+    be set.
+  </p>
   <table class="arguments">
     <tr>
       <th align="left" colspan="3">arguments</th>
@@ -917,7 +922,8 @@ session_variable.init() function.
       <th align="left" colspan="3">Exceptions</th>
     </tr>
     <tr>
-      <td colspan="3">Make sure you don't throw any!</td>
+      <td>&nbsp;</td>
+      <td colspan="2">Make sure you don't throw any!</td>
     </tr>
   </table>
   <p>

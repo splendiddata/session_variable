@@ -779,7 +779,7 @@
 	<h3>
 		<a name="get_session_variable_version">session_variable.get_session_variable_version()</a>
 	</h3>
-	<p>Returns the code version of the extension, currently '2.1.0'.</p>
+	<p>Returns the code version of the extension, currently '2.1.1'.</p>
 	<table class="arguments">
 		<tr>
 			<th class="arguments" colspan="3">arguments</th>
@@ -874,9 +874,10 @@
 		<tr>
 			<td class="arguments argname">&nbsp;</td>
 			<td class="arguments argtype">boolean</td>
-			<td class="arguments argdesc">true if a function called session_variable.variable_initialisation()
-				is currently being invoked on behalf of session_vairable initialisation
-				code. In all other cases the return will be false.</td>
+			<td class="arguments argdesc">true if a function called
+				session_variable.variable_initialisation() is currently being invoked on
+				behalf of session_vairable initialisation code. In all other cases the
+				return will be false.</td>
 		</tr>
 		<tr>
 			<th align="left" colspan="3" class="arguments">Exceptions</th>
@@ -895,6 +896,9 @@
 		initialisation code just after all values with their default values are loaded
 		from the session_variable.variables table, but before any other action takes
 		place.</p>
+	<p>During the execution for the session_variable.variable_initialisation()
+		function on behalf of session variable initialisation, also values of
+		constants can be set.</p>
 	<table class="arguments">
 		<tr>
 			<th align="left" colspan="3" class="arguments">arguments</th>
@@ -908,8 +912,8 @@
 		<tr>
 			<td class="arguments argname">&nbsp;</td>
 			<td class="arguments argtype">void</td>
-			<td class="arguments argdesc">Or anything you like. The result will be ignored by session_variable
-				initialisation code</td>
+			<td class="arguments argdesc">Or anything you like. The result will be
+				ignored by session_variable initialisation code</td>
 		</tr>
 		<tr>
 			<th align="left" colspan="3" class="arguments">Exceptions</th>

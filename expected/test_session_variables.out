@@ -26,7 +26,7 @@ select session_variable.init();
 select session_variable.get_session_variable_version();
  get_session_variable_version 
 ------------------------------
- 2.1.0
+ 2.1.1
 (1 row)
 
 select session_variable.get('does not exist', null::text);                                 -- fails: no variables exist
@@ -474,11 +474,18 @@ begin
 	if session_variable.is_executing_variable_initialisation()
 	then
 	    raise notice 'executing session_variable.variable_initialisation() on behalf of session_variable initialisation code';
+	    select session_variable.set('numeric const', 223344);                              -- setting a constant should succeed now  
 	else
 	    raise notice 'executing session_variable.variable_initialisation() on its own account';
 	end if;
 end;
 $$; 
+select session_variable.get('numeric const', null::numeric);
+                 get                  
+--------------------------------------
+ 3333333333333333333333.3333333333333
+(1 row)
+
 select session_variable.variable_initialisation();
 NOTICE:  executing session_variable.variable_initialisation() on its own account
  variable_initialisation 
@@ -486,11 +493,22 @@ NOTICE:  executing session_variable.variable_initialisation() on its own account
  
 (1 row)
 
+select session_variable.get('numeric const', null::numeric);
+                 get                  
+--------------------------------------
+ 3333333333333333333333.3333333333333
+(1 row)
+
 select session_variable.init();
 NOTICE:  executing session_variable.variable_initialisation() on behalf of session_variable initialisation code
- init 
-------
-    5
+ERROR:  query has no destination for result data
+HINT:  If you want to discard the results of a SELECT, use PERFORM instead.
+CONTEXT:  PL/pgSQL function session_variable.variable_initialisation() line 6 at SQL statement
+SQL statement "select session_variable.variable_initialisation()"
+select session_variable.get('numeric const', null::numeric);
+  get   
+--------
+ 223344
 (1 row)
 
 drop function session_variable.variable_initialisation();
@@ -498,6 +516,12 @@ select session_variable.init();
  init 
 ------
     5
+(1 row)
+
+select session_variable.get('numeric const', null::numeric);
+                 get                  
+--------------------------------------
+ 3333333333333333333333.3333333333333
 (1 row)
 
 select session_variable.drop('just text');
