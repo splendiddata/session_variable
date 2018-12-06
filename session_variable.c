@@ -310,7 +310,7 @@ Datum coerceOutput(Oid internalType, int internalTypeLength, Datum internalData,
 		else if (internalTypeLength > SIZEOF_DATUM)
 		{
 			result = (Datum) palloc(internalTypeLength);
-			memcpy((void*) result, &internalData, internalTypeLength);
+			memcpy((void*) result, (void*)internalData, internalTypeLength);
 		}
 		else
 		{

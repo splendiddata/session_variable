@@ -26,6 +26,7 @@ select session_variable.get_session_variable_version();
 select session_variable.get('does not exist', null::text);                                 -- fails: no variables exist
 
 select session_variable.create_variable('some_date', 'date'::regtype, '2015-07-15'::date);
+select session_variable.create_variable('some_name', 'name'::regtype, 'a_table_or_view_name'::name);
 select session_variable.create_variable('an integer', 'integer'::regtype, 123456789);
 select session_variable.create_variable('integer_initially_zero', 'integer'::regtype, 0);
 select session_variable.create_variable('just text', 'text'::regtype, 'just some text'::text);
@@ -39,6 +40,7 @@ select session_variable.create_variable('wrongdate', 'interval'::regtype, '2015-
 select session_variable.get('does not exist', null::text);                                 -- fails: does not exist
 
 select session_variable.type_of('some_date');
+select session_variable.type_of('some_name');
 select session_variable.type_of('an integer');
 select session_variable.type_of('varchar');
 select session_variable.type_of('numeric const');
@@ -47,6 +49,7 @@ select session_variable.type_of('does not exist');                              
 select session_variable.type_of(null);                                                     -- fails: variable_or_constan_name must be filled
 
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
+select session_variable.get('some_name', null::name);
 select session_variable.get('an integer', null::integer);
 select session_variable.get('just text', null::text);
 select session_variable.get('varchar', null::varchar);
@@ -64,6 +67,7 @@ select session_variable.exists('does not exist');
 select session_variable.drop('int[][]');
 
 select session_variable.set('some_date', '2050-12-11'::date);
+select session_variable.set('some_name', 'another_name'::varchar);
 select session_variable.set('an integer', 987654321);
 select session_variable.set('just text', 'a new bit of text'::text);
 select session_variable.set('varchar', 'an altered varchar text'::varchar);
@@ -74,10 +78,14 @@ select session_variable.set('does not exist', null::text);                      
 
 select to_char(session_variable.get('some_date', null::date), 'yyyy-mm-dd');
 select session_variable.get('an integer', null::integer);
+select session_variable.get('some_name', null::text);
 select session_variable.get('just text', null::text);
 select session_variable.get('varchar', null::varchar);
 select session_variable.get('numeric const', null::numeric);
 select session_variable.set('initially null', null::text);
+
+select session_variable.set('some_name', null::name);
+select coalesce(session_variable.get('some_name', null::text), 'is null');
 
 select session_variable.init();
 
