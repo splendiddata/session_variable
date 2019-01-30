@@ -470,6 +470,10 @@
 		session_variable.set(variable_name, value) invocations will be undone. The
 		effect is visible in the current session only. All other sessions are left
 		untouched.</p>
+	<p>
+		Beware that the <a href="#get_constant">get_constant()</a> function may return
+		cached content.
+	</p>
 	<table class="arguments">
 		<tr>
 			<th class="arguments" colspan="3">No arguments</th>
@@ -636,6 +640,161 @@
 	</p>
 
 	<h3>
+		<a name="get_stable" />session_variable.get_stable(variable_or_constant_name,
+		just_for_result_type)
+	</h3>
+	<p>
+		Does excactly the same as the <a href="#get">get()</a> function. But the
+		get_stable() function is marked "STABLE" (see: <a
+			href="https://www.postgresql.org/docs/current/sql-createfunction.html"
+			target="_blank">https://www.postgresql.org/docs/current/sql-createfunction.html</a>).
+		So the result of the function may be cached during the execution of a
+		statement. This behaviour will be right for practically all invocations. Only
+		when the value of a variable is altered within the execution of a statement,
+		for example in trigger code, then unexpected results may occur.
+	</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">Arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">variable_or_constant_name</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">Name of the variable or constant</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">just_for_result_type</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">In postgres, a function can only return
+				anyelement if it has got an anyelement argument. The type of the anyelement
+				argument will be the same as the anyelement returntype. So we need an
+				argument here with the type of the variable or constant. <br> <br>
+				The value must have the type specified for the variable or constant.
+			</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">The content of the variable or constant</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">02000</td>
+			<td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+				does not exist
+			</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">variable name must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22023</td>
+			<td class="arguments argdesc">please invoke as session_variable.get(<i>&lt;variable_or_constant_name&gt;</i>,
+				null::<i>&lt;type&gt;</i>)
+			</td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.get_stable('my_variable', null::text);</code>
+	</p>
+
+	<h3>
+		<a name="get_constant" />session_variable.get_constant(constant_name,
+		just_for_result_type)
+	</h3>
+	<p>Returns the session-local contents of the specified constant.</p>
+	<p>
+		BEWARE! this function is marked as "IMMUTABLE" (see: <a
+			href="https://www.postgresql.org/docs/current/sql-createfunction.html"
+			target="_blank">https://www.postgresql.org/docs/current/sql-createfunction.html</a>).
+		This means that te database is allowed to cache the function result for a
+		given combination of arguments. This is a good optimisation in normal
+		operation. But when altering the content of constants make sure that you use
+		the <a href="#get">get()</a> function instead of get_constant() as there is a chance that you get
+		a cached result when invoking get_constant().
+	</p>
+	<table class="arguments">
+		<tr>
+			<th class="arguments" colspan="3">Arguments</th>
+		</tr>
+		<tr>
+			<th class="arguments argname">name</th>
+			<th class="arguments argtype">type</th>
+			<th class="arguments argdesc">description</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">constant_name</td>
+			<td class="arguments argtype">text</td>
+			<td class="arguments argdesc">Name of the constant</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">just_for_result_type</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">In postgres, a function can only return
+				anyelement if it has got an anyelement argument. The type of the anyelement
+				argument will be the same as the anyelement returntype. So we need an
+				argument here with the type of the constant. <br> <br>
+				The value must have the type specified for the constant.
+			</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Returns</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">anyelement</td>
+			<td class="arguments argdesc">The (cached) content of the constant</td>
+		</tr>
+		<tr>
+			<th class="arguments" colspan="3">Exceptions</th>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">02000</td>
+			<td class="arguments argdesc">variable or constant "<i>&lt;variable_or_constant_name&gt;</i>"
+				does not exist
+			</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22004</td>
+			<td class="arguments argdesc">constant name must be filled</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">22023</td>
+			<td class="arguments argdesc">please invoke as session_variable.get_constant(<i>&lt;constant_name&gt;</i>,
+				null::<i>&lt;type&gt;</i>)
+			</td>
+		</tr>
+		<tr>
+			<td class="arguments argname">&nbsp;</td>
+			<td class="arguments argtype">42809</td>
+			<td class="arguments argdesc"><i>&lt;constant_name&gt;</i> is not a
+				constant</td>
+		</tr>
+	</table>
+	<p>
+		Example:<br>
+		<code>select session_variable.get_constant('my_constant', null::text);</code>
+	</p>
+
+	<h3>
 		<a name="exists" />session_variable.exists(variable_or_constant_name)
 	</h3>
 	<p>Returns the specified variable exists in the local session.</p>
@@ -779,7 +938,7 @@
 	<h3>
 		<a name="get_session_variable_version">session_variable.get_session_variable_version()</a>
 	</h3>
-	<p>Returns the code version of the extension, currently '2.1.2'.</p>
+	<p>Returns the code version of the extension, currently '3.0'.</p>
 	<table class="arguments">
 		<tr>
 			<th class="arguments" colspan="3">arguments</th>

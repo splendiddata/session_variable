@@ -26,7 +26,7 @@ select session_variable.init();
 select session_variable.get_session_variable_version();
  get_session_variable_version 
 ------------------------------
- 2.1.2
+ 3.0
 (1 row)
 
 select session_variable.get('does not exist', null::text);                                 -- fails: no variables exist
@@ -183,6 +183,26 @@ select session_variable.get('initially null', null::text);
 
 select session_variable.get('a_record', null::record);                                     -- fails: not created because of pseudo type
 ERROR:  variable or constant 'a_record' does not exists
+select session_variable.get_stable('an integer', null::real);
+ get_stable  
+-------------
+ 1.23457e+08
+(1 row)
+
+select session_variable.get_stable('numeric const', null::numeric);
+ get_stable 
+------------
+     123.45
+(1 row)
+
+select session_variable.get_constant('numeric const', null::real);
+ get_constant 
+--------------
+       123.45
+(1 row)
+
+select session_variable.get_constant('an integer', null::bigint);                          -- fails because variable 'an integer' is not a constant
+ERROR:  'an integer' is not a constant
 select session_variable.exists('int[][]');
  exists 
 --------

@@ -18,7 +18,7 @@
 #ifndef SESSION_VARIABLE_H
 #define SESSION_VARIABLE_H
 
-static char* sessionVariableVersion = "2.1.2";
+static char* sessionVariableVersion = "3.0";
 
 /*
  * Loads the session variables from the session_variable.variables table
@@ -34,6 +34,7 @@ extern Datum create_variable( PG_FUNCTION_ARGS);
 extern Datum drop( PG_FUNCTION_ARGS);
 extern Datum exists( PG_FUNCTION_ARGS);
 extern Datum get( PG_FUNCTION_ARGS);
+extern Datum get_constant( PG_FUNCTION_ARGS);
 extern Datum get_session_variable_version( PG_FUNCTION_ARGS);
 extern Datum init( PG_FUNCTION_ARGS);
 extern Datum is_constant( PG_FUNCTION_ARGS);

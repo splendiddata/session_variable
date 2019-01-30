@@ -59,6 +59,10 @@ select session_variable.get('int[][]', null::int[][]);
 select session_variable.get('initially null', null::text);
 select session_variable.get('a_record', null::record);                                     -- fails: not created because of pseudo type
 
+select session_variable.get_stable('an integer', null::real);
+select session_variable.get_stable('numeric const', null::numeric);
+select session_variable.get_constant('numeric const', null::real);
+select session_variable.get_constant('an integer', null::bigint);                          -- fails because variable 'an integer' is not a constant
 
 select session_variable.exists('int[][]');
 select session_variable.exists('initially null');

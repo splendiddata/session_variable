@@ -310,7 +310,7 @@ Datum coerceOutput(Oid internalType, int internalTypeLength, Datum internalData,
 		else if (internalTypeLength > SIZEOF_DATUM)
 		{
 			result = (Datum) palloc(internalTypeLength);
-			memcpy((void*) result, (void*)internalData, internalTypeLength);
+			memcpy((void*) result, (void*) internalData, internalTypeLength);
 		}
 		else
 		{
@@ -1794,6 +1794,100 @@ Datum get( PG_FUNCTION_ARGS)
 			variable->content, resultTypeOid, &castFailed);
 
 	elog(DEBUG1, "@<get('%s')", variableName);
+
+	PG_RETURN_DATUM(result);
+}
+
+/*
+ * get_constant(constant_name text) returns anyelement
+ */
+PG_FUNCTION_INFO_V1(get_constant);
+Datum get_constant( PG_FUNCTION_ARGS)
+{
+	char* variableName = NULL;
+	Datum result = (Datum) NULL;
+	SessionVariable* variable;
+	bool found;
+	Oid resultTypeOid;
+	bool castFailed;
+	CoercionPathType coercionPathType;
+	Oid coercionFunctionOid;
+
+	if (virgin)
+	{
+		reload();
+	}
+
+	if (PG_NARGS() != 2)
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_UNDEFINED_FUNCTION), (errmsg( "Usage: session_variable.get_constant(constant_name text, just_for_type anyelement)"))));
+		PG_RETURN_NULL()
+		;
+	}
+
+	if (PG_ARGISNULL(0))
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED), (errmsg("constant name must be filled"))));
+		PG_RETURN_NULL()
+		;
+	}
+
+	variableName = text_to_cstring(PG_GETARG_TEXT_P(0));
+
+	elog(DEBUG1, "@>get_constant('%s')", variableName);
+
+	variable = searchVariable(variableName, &variables, &found);
+	if (!found)
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_NO_DATA),(errmsg("constant '%s' does not exists", variableName ))));
+		PG_RETURN_NULL()
+		;
+	}
+
+	if (!variable->isConstant)
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_WRONG_OBJECT_TYPE),(errmsg("'%s' is not a constant", variableName ))));
+		PG_RETURN_NULL()
+		;
+	}
+
+	resultTypeOid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	if (variable->isNull)
+	{
+		if (resultTypeOid == variable->type)
+		{
+			coercionPathType = COERCION_PATH_RELABELTYPE;
+		}
+		else
+		{
+			coercionPathType = find_coercion_pathway(variable->type,
+					resultTypeOid, COERCION_EXPLICIT, &coercionFunctionOid);
+		}
+		switch (coercionPathType)
+		{
+		case COERCION_PATH_RELABELTYPE:
+		case COERCION_PATH_FUNC:
+		case COERCION_PATH_COERCEVIAIO:
+			elog(DEBUG1, "@<get('%s') = NULL", variableName);
+			PG_RETURN_NULL()
+			;
+			break;
+		default:
+			ereport(ERROR,
+					(errcode(ERRCODE_INVALID_PARAMETER_VALUE), (errmsg("The constant's internal type %s, cannot be cast to type %s", getTypeName(variable->type) ,getTypeName(resultTypeOid) ))));
+			PG_RETURN_NULL()
+			;
+		}
+	}
+
+	result = coerceOutput(variable->type, variable->typeLength,
+			variable->content, resultTypeOid, &castFailed);
+
+	elog(DEBUG1, "@<get_constant('%s')", variableName);
 
 	PG_RETURN_DATUM(result);
 }
