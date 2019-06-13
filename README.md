@@ -71,7 +71,7 @@ select session_variable.drop('my_variable');
 
 <h2>Postgres versions</h2>
 The session_variable database extension has been tested on Postgres versions 
-9.5, 9.6, 10 and 11.
+9.5, 9.6, 10, 11 and 12.
 <h2>Installation</h2>
 Install as a normal Posrgres database extension:<br>
  - Make sure pg_config points to the right places<br>
@@ -976,7 +976,7 @@ session_variable.init() function.
     session_variable.get_session_variable_version()
   </h3>
   <p>
-    Returns the code version of the extension, currently '3.0'. 
+    Returns the code version of the extension, currently '3.1'. 
   </p>
   <table class="arguments">
     <tr>

@@ -687,7 +687,7 @@ void invokeInitialisationFunction()
 	if (OidIsValid(namespaceOid))
 	{
 		/*
-		 * Check if a no-argument function called "session_variable_initialisation" exists in namespace
+		 * Check if a no-argument function called "variable_initialisation" exists in namespace
 		 * "session_variable"
 		 */
 		oidvector* emptyArgVector = buildoidvector(NULL, 0);
@@ -857,11 +857,15 @@ bool insertVariable(SessionVariable* variable)
 			"from pg_catalog.pg_type typ "
 			"join pg_catalog.pg_namespace nsp on typ.typnamespace = nsp.oid "
 			"where typ.oid = $3";
-	int32 nrArgs = 4;
-	Oid oid[nrArgs];
-	Datum val[nrArgs];
-	char nulls[nrArgs];
+	const size_t nrArgs = 4;
+	Oid* oid;
+	Datum* val;
+	char* nulls;
 	bool result;
+
+	oid = (Oid*)palloc(sizeof(Oid) * nrArgs);
+	val = (Datum*)palloc(sizeof(Datum) * nrArgs);
+	nulls = (char*)palloc(sizeof(char) * nrArgs);
 
 	oid[0] = TEXTOID;
 	val[0] = (Datum) cstring_to_text(variable->name);
@@ -888,6 +892,10 @@ bool insertVariable(SessionVariable* variable)
 	result = SPI_execute_with_args(sql, nrArgs, oid, val, nulls, false, 1);
 	SPI_finish();
 
+	pfree(oid);
+	pfree(val);
+	pfree(nulls);
+
 	return result;
 }
 
@@ -901,10 +909,14 @@ void updateVariable(SessionVariable* variable)
 	char* sql = "update session_variable.variables"
 			" set initial_value = $1"
 			" where variable_name = $2";
-	int32 nrArgs = 2;
-	Oid oid[nrArgs];
-	Datum val[nrArgs];
-	char nulls[nrArgs];
+	static const size_t nrArgs = 2;
+	Oid* oid;
+	Datum* val;
+	char* nulls;
+
+	oid = (Oid*)palloc(sizeof(Oid) * nrArgs);
+	val = (Datum*)palloc(sizeof(Datum) * nrArgs);
+	nulls = (char*)palloc(sizeof(char) * nrArgs);
 
 	oid[0] = initialValueTypeOid;
 	if (variable->isNull)
@@ -925,6 +937,10 @@ void updateVariable(SessionVariable* variable)
 	SPI_connect();
 	SPI_execute_with_args(sql, nrArgs, oid, val, nulls, false, 1);
 	SPI_finish();
+
+	pfree(oid);
+	pfree(val);
+	pfree(nulls);
 }
 
 /*
@@ -937,15 +953,22 @@ void deleteVariable(text* variableName)
 {
 	char* sql =
 			"delete from session_variable.variables where variable_name = $1";
-	int32 nrArgs = 1;
-	Oid oid[nrArgs];
-	Datum val[nrArgs];
+	const size_t nrArgs = 1;
+	Oid* oid;
+	Datum* val;
+
+	oid = (Oid*)palloc(sizeof(Oid) * nrArgs);
+	val = (Datum*)palloc(sizeof(Datum) * nrArgs);
+
 	oid[0] = TEXTOID;
 	val[0] = (Datum) variableName;
 
 	SPI_connect();
 	SPI_execute_with_args(sql, nrArgs, oid, val, NULL, false, 1);
 	SPI_finish();
+
+	pfree(oid);
+	pfree(val);
 }
 
 /*
