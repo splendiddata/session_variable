@@ -199,7 +199,7 @@ select session_variable.dump();
  select session_variable.create_variable('schema_1.my_var[]', 'schema_1._my_type'::regtype, '{"(element1,1)","(element2,2)"}'::schema_1._my_type);
 (10 rows)
 
-alter extension session_variable update;
+alter extension session_variable update to '2.0';
 select session_variable.get('schema_1.my_var', null::schema_1.my_type);
        get       
 -----------------

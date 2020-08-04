@@ -59,7 +59,7 @@ select session_variable.set('int[]', array[1,2,3]);
 
 select session_variable.dump();
 
-alter extension session_variable update;
+alter extension session_variable update to '2.0';
 
 select session_variable.get('schema_1.my_var', null::schema_1.my_type);
 select session_variable.get('schema_1.my_var[]', null::schema_1.my_type[]);

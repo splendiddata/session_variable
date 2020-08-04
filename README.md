@@ -1164,4 +1164,8 @@ until the "alter extension session_variable update;" command is executed. Make
 sure you do not restore any dump of the session_variable.variables table that
 was created before the "alter extension session_variable update;" into a
 database that already executes version 2.
-
+### version 3
+Added functions get\_stable() and get\_constant().
+### version 3.1
+Removed the .so file extension from the function definitions so they might work
+on Windows as well.

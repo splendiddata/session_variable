@@ -14,3 +14,4 @@
 #
 
 comment = 'session_variable version 2.0'
+module_pathname = '$libdir/session_variable.so'
