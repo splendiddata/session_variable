@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Splendid Data Product Development B.V. 2013
+ * Copyright (c) Splendid Data Product Development B.V. 2013 - 2021
  *
  * This program is free software: You may redistribute and/or modify under the
  * terms of the GNU General Public License as published by the Free Software
@@ -590,8 +590,8 @@ int reload()
 			" and typ.typtype <> 'p'"
 			" order by variable_name";
 	text* variableName = NULL;
-	bool isConstValue = false;
-	Oid valueType = InvalidOid;
+	bool isConstValue;
+	Oid valueType;
 	Datum value = (Datum) NULL;
 	Datum mallocedValue;
 	bool isNull;
@@ -1055,15 +1055,11 @@ bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
 	parentLevel = searchVariable(varName, &variables, &found);
 	if (found)
 	{
-		if (value && typeLength < 0)
+		if (value && (typeLength < 0 || typeLength > SIZEOF_DATUM))
 		{
 			/*
 			 * The value has been malloced instead of palloced, so must be freed if an error occurs.
 			 */
-			free((void*) value);
-		}
-		if (value && typeLength > SIZEOF_DATUM)
-		{
 			free((void*) value);
 		}
 		ereport(ERROR,
@@ -1106,7 +1102,7 @@ Datum create_variable( PG_FUNCTION_ARGS)
 	Oid type = InvalidOid;
 	Oid typeOid = InvalidOid;
 	Datum content = (Datum) NULL;
-	Oid contentTypeOid = InvalidOid;
+	Oid contentTypeOid;
 	int typeLength;
 	bool isNull = false;
 	bool result;
@@ -1211,7 +1207,7 @@ Datum create_constant( PG_FUNCTION_ARGS)
 	Oid type = InvalidOid;
 	Oid typeOid = InvalidOid;
 	Datum content = (Datum) NULL;
-	Oid contentTypeOid = InvalidOid;
+	Oid contentTypeOid;
 	int typeLength;
 	int contentTypeLength;
 	bool result;

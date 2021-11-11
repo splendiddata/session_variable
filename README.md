@@ -976,7 +976,7 @@ session_variable.init() function.
     session_variable.get_session_variable_version()
   </h3>
   <p>
-    Returns the code version of the extension, currently '3.1'. 
+    Returns the code version of the extension, currently '3.2'. 
   </p>
   <table class="arguments">
     <tr>
@@ -1169,3 +1169,7 @@ Added functions get\_stable() and get\_constant().
 ### version 3.1
 Removed the .so file extension from the function definitions so they might work
 on Windows as well.
+### version 3.2
+Some textual changes in the session_variable.c file to keep cppcheck fund bug hapy.
+See: <a href="https://github.com/splendiddata/session_variable/issues/5"
+			target="_blank">https://github.com/splendiddata/session_variable/issues/5</a>

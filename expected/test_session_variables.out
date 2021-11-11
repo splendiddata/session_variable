@@ -26,7 +26,7 @@ select session_variable.init();
 select session_variable.get_session_variable_version();
  get_session_variable_version 
 ------------------------------
- 3.1
+ 3.2
 (1 row)
 
 select session_variable.get('does not exist', null::text);                                 -- fails: no variables exist
