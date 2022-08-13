@@ -32,9 +32,12 @@ begin
         create role session_variable_administrator_role
             in role session_variable_user_role;
     end if;
+    if (select substring (version() from '|PostgreSQL (\d+)')::int) < 15 then
+        create schema if not exists session_variable;
+    end if;
 end; $$;
  
-create schema if not exists session_variable;
+
 comment on schema session_variable is 'Belongs to the session_variable extension';
 grant usage on schema session_variable to session_variable_user_role;
 
