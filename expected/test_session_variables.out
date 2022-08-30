@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Splendid Data Product Development B.V. 2013
+ * Copyright (c) Splendid Data Product Development B.V. 2013 - 2022
  *
  * This program is free software: You may redistribute and/or modify under the
  * terms of the GNU General Public License as published by the Free Software
@@ -26,7 +26,7 @@ select session_variable.init();
 select session_variable.get_session_variable_version();
  get_session_variable_version 
 ------------------------------
- 3.2
+ 3.3
 (1 row)
 
 select session_variable.get('does not exist', null::text);                                 -- fails: no variables exist

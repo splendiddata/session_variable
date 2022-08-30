@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Splendid Data Product Development B.V. 2013
+ * Copyright (c) Splendid Data Product Development B.V. 2013 - 2022
  * 
  * This program is free software: You may redistribute and/or modify under the 
  * terms of the GNU General Public License as published by the Free Software 
@@ -15,7 +15,7 @@
  * this program.  If not, Client should obtain one via www.gnu.org/licenses/.
  */
 
-create or replace function get_stable
+create function get_stable
     ( variable_or_constant_name text
     , just_for_result_type anyelement
     )
@@ -31,7 +31,7 @@ grant execute on function get_stable
     )
     to session_variable_user_role;
 
-create or replace function get_constant
+create function get_constant
     ( constant_name text
     , just_for_result_type anyelement
     )

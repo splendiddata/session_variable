@@ -13,5 +13,5 @@
 # this program.  If not, Client should obtain one via www.gnu.org/licenses/.
 #
 
-comment = 'session_variable version 3.0'
-module_pathname = '$libdir/session_variable.so'
+comment = 'session_variable version 3.3'
+module_pathname = '$libdir/session_variable'

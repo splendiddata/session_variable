@@ -71,7 +71,7 @@ select session_variable.drop('my_variable');
 
 <h2>Postgres versions</h2>
 The session_variable database extension has been tested on Postgres versions 
-9.6, 10, 11, 12, 13, 14 and 15beta1.
+10, 11, 12, 13, 14 and 15.
 <h2>Installation</h2>
 Install as a normal Posrgres database extension:<br>
  - Make sure pg_config points to the right places<br>
@@ -976,7 +976,7 @@ session_variable.init() function.
     session_variable.get_session_variable_version()
   </h3>
   <p>
-    Returns the code version of the extension, currently '3.2'. 
+    Returns the code version of the extension, currently '3.3'. 
   </p>
   <table class="arguments">
     <tr>
@@ -1173,3 +1173,7 @@ on Windows as well.
 Some textual changes in the session_variable.c file to keep cppcheck fund bug hapy.
 See: <a href="https://github.com/splendiddata/session_variable/issues/5"
 			target="_blank">https://github.com/splendiddata/session_variable/issues/5</a>
+### version 3.3
+Adapted the new Postgres rule that extensions shalt not use 'create of not exists' and
+'create or replace' constructs.<br>
+Discontinued support for session_variables version 1.0.

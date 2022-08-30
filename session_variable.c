@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Splendid Data Product Development B.V. 2013 - 2021
+ * Copyright (c) Splendid Data Product Development B.V. 2013 - 2022
  *
  * This program is free software: You may redistribute and/or modify under the
  * terms of the GNU General Public License as published by the Free Software
@@ -56,7 +56,6 @@ Datum coerceOutput(Oid internalType, int internalTypeLength, Datum internalData,
 SessionVariable* createVariable(text* variableName, bool isConst, Oid valueType,
 		int typeLength, bool isNull, Datum value);
 void deleteVariable(text* variablename);
-Datum deserializeV1(text* varName, Oid dataType, Datum detoastedValue);
 Datum deserializeV2(text* varName, Oid dataType, Datum detoastedValue);
 int getTypeLength(Oid typeOid);
 bool insertVariable(SessionVariable* variable);
@@ -68,7 +67,6 @@ bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
 		int typeLength, bool isNull, Datum value);
 SessionVariable* searchVariable(char* variableName, SessionVariable** lvl,
 		bool* found);
-Datum serializeV1(SessionVariable* variable);
 Datum serializeV2(SessionVariable* variable);
 void updateRecursively(SessionVariable* var);
 void updateVariable(SessionVariable* variable);
@@ -80,7 +78,6 @@ Datum (*deserialize)(text* varName, Oid dataType,
 		Datum detoastedValue) = &deserializeV2;
 Datum (*serialize)(SessionVariable* variable) = &serializeV2;
 Oid initialValueTypeOid = TEXTOID;
-bool version1 = false;
 
 void _PG_init(void);
 void _PG_init()
@@ -109,19 +106,14 @@ void _PG_init()
 	SPI_cursor_close(cursor);
 	SPI_finish();
 
-	if (!strcmp(installedVersion, "1.0"))
-	{
-		deserialize = &deserializeV1;
-		serialize = &serializeV1;
-		initialValueTypeOid = BYTEAOID;
-		version1 = true;
-	}
-	else
-	{
-		deserialize = &deserializeV2;
-		serialize = &serializeV2;
-		initialValueTypeOid = TEXTOID;
-	}
+    if (!strcmp(installedVersion, "1.0")) {
+        ereport(ERROR,
+            (errcode(ERRCODE_DATA_CORRUPTED),(errmsg("session_variable.variables table contains unsupported data"))));
+    }
+
+	deserialize = &deserializeV2;
+	serialize = &serializeV2;
+	initialValueTypeOid = TEXTOID;
 }
 /*
  * Finds the type length in the type cache. -1 for varlena
@@ -484,51 +476,6 @@ void buildBTree(void)
 	}
 }
 
-Datum deserializeV1(text* varName, Oid dataType, Datum detoastedValue)
-{
-	Datum value;
-	int typeLength = getTypeLength(dataType);
-
-	value = (Datum) VARDATA(detoastedValue);
-
-	if (typeLength > 0 && typeLength <= SIZEOF_DATUM)
-	{
-		/*
-		 * For fixed length types of 8 bytes or shorter, the VARDATA is the
-		 * Datum we are looking for - not a reference. So take it as value.
-		 */
-		Datum tmp;
-		memcpy(&tmp, (void*) value, SIZEOF_DATUM);
-		value = tmp;
-	}
-
-	if ((typeLength < 0 && VARSIZE(detoastedValue) - VARHDRSZ != VARSIZE(value))
-			|| (typeLength > 0 && typeLength <= SIZEOF_DATUM
-					&& VARSIZE(detoastedValue) - VARHDRSZ != SIZEOF_DATUM)
-			|| (typeLength > SIZEOF_DATUM
-					&& VARSIZE(detoastedValue) - VARHDRSZ != typeLength))
-	{
-		/*
-		 * The Datum containing the content of the value is wrapped in a bytea datum and stored.
-		 * So the size of the content must match the content size of the wrapping bytea (= VARSIZE - VARHDRSZ).
-		 * If this is not the case, someone has manually altered the content.
-		 */
-		elog(
-				LOG,
-				"Someone has been messing with variable '%s', expected length=%d, actual length = %d",
-				text_to_cstring(varName),
-				typeLength < 0 ? VARSIZE(value) : typeLength < SIZEOF_DATUM ? SIZEOF_DATUM : typeLength,
-				VARSIZE(detoastedValue) - VARHDRSZ);
-		elog(
-				NOTICE,
-				"Session variable '%s' is incorrectly stored in the session_variable.variables table",
-				text_to_cstring(varName));
-		return (Datum) NULL;
-	}
-
-	return value;
-}
-
 Datum deserializeV2(text* varName, Oid dataType, Datum detoastedValue)
 {
 	HeapTuple typTup;
@@ -736,46 +683,6 @@ PG_FUNCTION_INFO_V1(is_executing_variable_initialisation);
 Datum is_executing_variable_initialisation( PG_FUNCTION_ARGS)
 {
 	PG_RETURN_BOOL(isExecutingInitialisationFunction);
-}
-
-/*
- * Serializes the memory image of the variable's content into a bytea
- *
- * @param SessionVariable* variable - the variable to serialize
- * @return Datum - The content wrapped in a bytea
- */
-Datum serializeV1(SessionVariable* variable)
-{
-	Datum contentWrapper;
-
-	if (variable->isNull)
-	{
-		return (Datum) NULL;
-	}
-
-	if (variable->typeLength < 0)
-	{
-		contentWrapper = (Datum) palloc(
-		VARHDRSZ + VARSIZE(variable->content));
-		SET_VARSIZE(contentWrapper, VARHDRSZ + VARSIZE(variable->content));
-		memcpy(VARDATA(contentWrapper), (void*) variable->content,
-				VARSIZE(variable->content));
-	}
-	else if (variable->typeLength > SIZEOF_DATUM)
-	{
-		contentWrapper = (Datum) palloc(VARHDRSZ + variable->typeLength);
-		SET_VARSIZE(contentWrapper, VARHDRSZ + variable->typeLength);
-		memcpy(VARDATA(contentWrapper), (void*) variable->content,
-				variable->typeLength);
-	}
-	else
-	{
-		contentWrapper = (Datum) palloc(VARHDRSZ + SIZEOF_DATUM);
-		SET_VARSIZE(contentWrapper, VARHDRSZ + SIZEOF_DATUM);
-		memcpy(VARDATA(contentWrapper), &variable->content,
-		SIZEOF_DATUM);
-	}
-	return contentWrapper;
 }
 
 /*
@@ -1425,8 +1332,6 @@ Datum alter_value( PG_FUNCTION_ARGS)
 	char* variableName = NULL;
 	SessionVariable* variable;
 	bool found;
-	bool priorContentIsNull = false;
-	Datum priorContent = (Datum) NULL;
 	Datum newContent = (Datum) NULL;
 	Oid newValueTypeOid;
 	int newValueTypeLength;
@@ -1484,28 +1389,6 @@ Datum alter_value( PG_FUNCTION_ARGS)
 		newValueTypeLength = getTypeLength(newValueTypeOid);
 	}
 
-	/*
-	 * To be removed well after the introduction of version 2 to allow people
-	 * time to migrate
-	 */
-	if (version1)
-	{
-		priorContentIsNull = variable->isNull;
-		if (!priorContentIsNull)
-		{
-			priorContent = coerceOutput(variable->type, variable->typeLength,
-					variable->content, newValueTypeOid, &castFailed);
-			if (castFailed)
-			{
-				/*
-				 * something went wrong, but that is already logged
-				 */
-				PG_RETURN_NULL()
-				;
-			}
-		}
-	}
-
 	if (PG_ARGISNULL(1))
 	{
 		newContent = (Datum) NULL;
@@ -1553,20 +1436,6 @@ Datum alter_value( PG_FUNCTION_ARGS)
 
 	elog(DEBUG1, "@<alter_value('%s')", variableName);
 
-	/*
-	 * To be removed well after the introduction of version 2 to allow people
-	 * time to migrate
-	 */
-	if (version1)
-	{
-		if (priorContentIsNull)
-		{
-			PG_RETURN_NULL()
-			;
-		}
-		PG_RETURN_DATUM(priorContent);
-	}
-
 	PG_RETURN_BOOL(true);
 }
 
@@ -1579,8 +1448,6 @@ Datum set( PG_FUNCTION_ARGS)
 	char* variableName = NULL;
 	SessionVariable* variable;
 	bool found;
-	bool priorContentIsNull = false;
-	Datum priorContent = (Datum) NULL;
 	Datum newContent = (Datum) NULL;
 	Oid newValueTypeOid;
 	int newValueTypeLength;
@@ -1646,28 +1513,6 @@ Datum set( PG_FUNCTION_ARGS)
 		newValueTypeLength = getTypeLength(newValueTypeOid);
 	}
 
-	/*
-	 * To be removed well after the introduction of version 2 to allow people
-	 * time to migrate
-	 */
-	if (version1)
-	{
-		priorContentIsNull = variable->isNull;
-		if (!priorContentIsNull)
-		{
-			priorContent = coerceOutput(variable->type, variable->typeLength,
-					variable->content, newValueTypeOid, &castFailed);
-			if (castFailed)
-			{
-				/*
-				 *  something went wrong, but that is already logged
-				 */
-				PG_RETURN_NULL()
-				;
-			}
-		}
-	}
-
 	if (PG_ARGISNULL(1))
 	{
 		newContent = (Datum) NULL;
@@ -1713,20 +1558,6 @@ Datum set( PG_FUNCTION_ARGS)
 	variable->content = newContent;
 
 	elog(DEBUG1, "@<set('%s')", variableName);
-
-	/*
-	 * To be removed well after the introduction of version 2 to allow people
-	 * time to migrate
-	 */
-	if (version1)
-	{
-		if (priorContentIsNull)
-		{
-			PG_RETURN_NULL()
-			;
-		}
-		PG_RETURN_DATUM(priorContent);
-	}
 
 	PG_RETURN_BOOL(true);
 }
@@ -2131,7 +1962,6 @@ Datum upgrade_1_to_2(PG_FUNCTION_ARGS)
 	deserialize = &deserializeV2;
 	serialize = &serializeV2;
 	initialValueTypeOid = TEXTOID;
-	version1 = false;
 
 	updateRecursively(variables);
 

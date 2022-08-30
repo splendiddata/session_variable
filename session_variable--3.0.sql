@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Splendid Data Product Development B.V. 2013
+ * Copyright (c) Splendid Data Product Development B.V. 2013 - 2022
  * 
  * This program is free software: You may redistribute and/or modify under the 
  * terms of the GNU General Public License as published by the Free Software 
@@ -40,7 +40,7 @@ end; $$;
 comment on schema session_variable is 'Belongs to the session_variable extension';
 grant usage on schema session_variable to session_variable_user_role;
 
-create table if not exists variables 
+create table variables 
 (  variable_name                text          not null 
                                               primary key
                                               collate "C"
@@ -56,7 +56,7 @@ create table if not exists variables
 select pg_catalog.pg_extension_config_dump('variables', '');
 comment on table variables is 'holds constant values and the initial values of session variables';
 
-create or replace function variables_bi()
+create function variables_bi()
 returns trigger as
 $body$
 begin
@@ -74,7 +74,7 @@ create trigger variables_bi
 before insert on variables 
 for each row execute procedure variables_bi();
 
-create or replace function variables_bu()
+create function variables_bu()
 returns trigger as
 $body$
 begin
@@ -90,7 +90,7 @@ create trigger variables_bu
 before update on variables 
 for each row execute procedure variables_bu();
 
-create or replace function create_variable
+create function create_variable
     (   variable_name               text
     ,   variable_type               regtype
     ) returns boolean
@@ -105,7 +105,7 @@ grant execute on function create_variable
     )
     to session_variable_administrator_role;     
 
-create or replace function create_variable
+create function create_variable
     (   variable_name               text
     ,   variable_type               regtype
     ,   initial_value               anyelement
@@ -123,7 +123,7 @@ grant execute on function create_variable
     )
     to session_variable_administrator_role;
 
-create or replace function create_constant
+create function create_constant
     (   constant_name               text
     ,   constant_type               regtype
     ,   constant_value              anyelement
@@ -141,7 +141,7 @@ grant execute on function create_constant
     )
     to session_variable_administrator_role;
 
-create or replace function alter_value
+create function alter_value
     (   variable_or_constant_name   text
     ,   variable_or_constant_value  anyelement
     ) returns boolean
@@ -156,7 +156,7 @@ grant execute on function alter_value
     )
     to session_variable_administrator_role;
 
-create or replace function drop(variable_or_constant_name text)
+create function drop(variable_or_constant_name text)
     returns boolean
     as 'session_variable.so', 'drop' language C security definer;
 comment on function drop(variable_or_constant_name text)
@@ -164,7 +164,7 @@ comment on function drop(variable_or_constant_name text)
 grant execute on function drop(variable_or_constant_name text)
     to session_variable_administrator_role;
 
-create or replace function get
+create function get
     ( variable_or_constant_name text
     , just_for_result_type anyelement
     )
@@ -180,7 +180,7 @@ grant execute on function get
     )
     to session_variable_user_role;
 
-create or replace function get_stable
+create function get_stable
     ( variable_or_constant_name text
     , just_for_result_type anyelement
     )
@@ -196,7 +196,7 @@ grant execute on function get_stable
     )
     to session_variable_user_role;
 
-create or replace function get_constant
+create function get_constant
     ( constant_name text
     , just_for_result_type anyelement
     )
@@ -212,7 +212,7 @@ grant execute on function get_constant
     )
     to session_variable_user_role;
 
-create or replace function set(variable_name text, new_value anyelement)
+create function set(variable_name text, new_value anyelement)
     returns boolean 
     as 'session_variable.so', 'set' language C security definer cost 2;
 comment on function set(variable_name text, new_value anyelement) is
@@ -220,7 +220,7 @@ comment on function set(variable_name text, new_value anyelement) is
 grant execute on function set(variable_name text, new_value anyelement)
     to session_variable_user_role;
 
-create or replace function "exists"(variable_name text) 
+create function "exists"(variable_name text) 
     returns boolean
     as 'session_variable.so', 'exists' language C security definer cost 2;
 comment on function "exists"(variable_name text) is
@@ -228,7 +228,7 @@ comment on function "exists"(variable_name text) is
 grant execute on function "exists"(variable_name text)
     to session_variable_user_role;
     
-create or replace function type_of(variable_or_constant_name text)
+create function type_of(variable_or_constant_name text)
     returns regtype
     as 'session_variable.so', 'type_of' language C security definer cost 2;
 comment on function type_of(variable_or_constant_name text) is
@@ -236,7 +236,7 @@ comment on function type_of(variable_or_constant_name text) is
 grant execute on function type_of(variable_or_constant_name text)
     to session_variable_user_role;
     
-create or replace function is_constant(variable_or_constant_name text)
+create function is_constant(variable_or_constant_name text)
     returns boolean
     as 'session_variable.so', 'is_constant' language C security definer cost 2;
 comment on function is_constant(variable_or_constant_name text) is
@@ -245,13 +245,13 @@ comment on function is_constant(variable_or_constant_name text) is
 grant execute on function is_constant(variable_or_constant_name text)
     to session_variable_user_role;
 
-create or replace function init()
+create function init()
     returns integer
     as 'session_variable.so', 'init' language C security definer;
 comment on function init() is 
     'Reloads all constants and session variables from the variables table, thus reverting all local changes';
 
-create or replace function get_session_variable_version()
+create function get_session_variable_version()
     returns varchar
     as 'session_variable.so', 'get_session_variable_version' language C security definer cost 1;
 comment on function get_session_variable_version() is 
@@ -259,13 +259,13 @@ comment on function get_session_variable_version() is
 grant execute on function get_session_variable_version() 
     to session_variable_user_role;
 
-create or replace function is_executing_variable_initialisation()
+create function is_executing_variable_initialisation()
     returns boolean
     as 'session_variable.so', 'is_executing_variable_initialisation' language C security definer cost 1;
 comment on function is_executing_variable_initialisation() is 
     'Reurns true if a function called session_variable.variable_initialisation() currently being invoked on behalf of session_variable initialisation code';
     
-create or replace function session_variable.dump(do_truncate boolean default true)
+create function session_variable.dump(do_truncate boolean default true)
   returns setof text AS
 $$
 declare

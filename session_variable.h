@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Splendid Data Product Development B.V. 2013 - 2021
+ * Copyright (c) Splendid Data Product Development B.V. 2013 - 2022
  *
  * This program is free software: You may redistribute and/or modify under the
  * terms of the GNU General Public License as published by the Free Software
@@ -18,7 +18,7 @@
 #ifndef SESSION_VARIABLE_H
 #define SESSION_VARIABLE_H
 
-static char* sessionVariableVersion = "3.2";
+static char* sessionVariableVersion = "3.3";
 
 /*
  * Loads the session variables from the session_variable.variables table
