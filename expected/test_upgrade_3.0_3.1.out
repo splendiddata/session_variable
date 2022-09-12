@@ -17,12 +17,7 @@
 -- init
 create schema schema_1;
 create extension session_variable version '3.0';
-ERROR:  schema session_variable is not a member of extension "session_variable"
-DETAIL:  An extension may only use CREATE ... IF NOT EXISTS to skip object creation if the conflicting object is one that it already owns.
-CONTEXT:  SQL statement "create schema if not exists session_variable"
-PL/pgSQL function inline_code_block line 19 at SQL statement
 alter extension session_variable update to '3.1';
-ERROR:  extension "session_variable" does not exist
 -- cleanup
 drop schema if exists session_variable cascade;
-NOTICE:  schema "session_variable" does not exist, skipping
+NOTICE:  drop cascades to extension session_variable
