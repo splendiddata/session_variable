@@ -1216,7 +1216,7 @@ Datum drop( PG_FUNCTION_ARGS)
 {
 	text* variableNameArg;
 	char* variableName;
-	SessionVariable *variable, **higherLvl, *replacement, *aboveReplacement;
+	SessionVariable *variable = NULL, **higherLvl, *replacement, *aboveReplacement;
 	int diff;
 
 	if (virgin)
