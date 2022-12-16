@@ -680,7 +680,7 @@ void invokeInitialisationFunction()
  * under control of the session_variable code.
  */
 PG_FUNCTION_INFO_V1(is_executing_variable_initialisation);
-Datum is_executing_variable_initialisation( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum is_executing_variable_initialisation( PG_FUNCTION_ARGS)
 {
 	PG_RETURN_BOOL(isExecutingInitialisationFunction);
 }
@@ -1003,7 +1003,7 @@ bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
  * create_variable(variable_name text, variable_type regtype, initial_value anyelement) returns boolean
  */
 PG_FUNCTION_INFO_V1(create_variable);
-Datum create_variable( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum create_variable( PG_FUNCTION_ARGS)
 {
 	text* variableName = NULL;
 	Oid type = InvalidOid;
@@ -1108,7 +1108,7 @@ Datum create_variable( PG_FUNCTION_ARGS)
  * create_constant(constant_name text, constant_type regtype, value anyelement) returns boolean
  */
 PG_FUNCTION_INFO_V1(create_constant);
-Datum create_constant( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum create_constant( PG_FUNCTION_ARGS)
 {
 	text* variableName = NULL;
 	Oid type = InvalidOid;
@@ -1212,7 +1212,7 @@ Datum create_constant( PG_FUNCTION_ARGS)
  * drop(variable_constant_name text) returns boolean true
  */
 PG_FUNCTION_INFO_V1(drop);
-Datum drop( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum drop( PG_FUNCTION_ARGS)
 {
 	text* variableNameArg;
 	char* variableName;
@@ -1327,7 +1327,7 @@ Datum drop( PG_FUNCTION_ARGS)
  * alter_value(variable_constant_name text, value anyelement) returns anyelement
  */
 PG_FUNCTION_INFO_V1(alter_value);
-Datum alter_value( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum alter_value( PG_FUNCTION_ARGS)
 {
 	char* variableName = NULL;
 	SessionVariable* variable;
@@ -1443,7 +1443,7 @@ Datum alter_value( PG_FUNCTION_ARGS)
  * set(variable_name text, value anyelement) returns boolean
  */
 PG_FUNCTION_INFO_V1(set);
-Datum set( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum set( PG_FUNCTION_ARGS)
 {
 	char* variableName = NULL;
 	SessionVariable* variable;
@@ -1566,7 +1566,7 @@ Datum set( PG_FUNCTION_ARGS)
  * get(variable_constant_name text) returns anyelement
  */
 PG_FUNCTION_INFO_V1(get);
-Datum get( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum get( PG_FUNCTION_ARGS)
 {
 	char* variableName = NULL;
 	Datum result = (Datum) NULL;
@@ -1652,7 +1652,7 @@ Datum get( PG_FUNCTION_ARGS)
  * get_constant(constant_name text) returns anyelement
  */
 PG_FUNCTION_INFO_V1(get_constant);
-Datum get_constant( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum get_constant( PG_FUNCTION_ARGS)
 {
 	char* variableName = NULL;
 	Datum result = (Datum) NULL;
@@ -1746,7 +1746,7 @@ Datum get_constant( PG_FUNCTION_ARGS)
  * type_of(variable_or_constant_name text) returns regtype
  */
 PG_FUNCTION_INFO_V1(type_of);
-Datum type_of( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum type_of( PG_FUNCTION_ARGS)
 {
 	char* variableName = NULL;
 	SessionVariable* variable;
@@ -1795,7 +1795,7 @@ Datum type_of( PG_FUNCTION_ARGS)
  * exists(variable_constant_name text) returns bool
  */
 PG_FUNCTION_INFO_V1(exists);
-Datum exists( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum exists( PG_FUNCTION_ARGS)
 {
 	bool found;
 	char* variableName;
@@ -1836,7 +1836,7 @@ Datum exists( PG_FUNCTION_ARGS)
  * is_constant(variable_constant_name text) returns bool
  */
 PG_FUNCTION_INFO_V1(is_constant);
-Datum is_constant( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum is_constant( PG_FUNCTION_ARGS)
 {
 	char* variableName;
 	SessionVariable* variable;
@@ -1886,7 +1886,7 @@ Datum is_constant( PG_FUNCTION_ARGS)
  * init() returns integer
  */
 PG_FUNCTION_INFO_V1(init);
-Datum init( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum init( PG_FUNCTION_ARGS)
 {
 	int result;
 
@@ -1912,7 +1912,7 @@ Datum init( PG_FUNCTION_ARGS)
  * This function returns the current version of this database extension
  */
 PG_FUNCTION_INFO_V1(get_session_variable_version);
-Datum get_session_variable_version( PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum get_session_variable_version( PG_FUNCTION_ARGS)
 {
 	Datum pg_versioning_version;
 
@@ -1955,7 +1955,7 @@ Datum upgrade_1_to_2(PG_FUNCTION_ARGS);
  * Updates all loaded variables - storing them in the right format for version 2
  */
 PG_FUNCTION_INFO_V1(upgrade_1_to_2);
-Datum upgrade_1_to_2(PG_FUNCTION_ARGS)
+PGDLLEXPORT Datum upgrade_1_to_2(PG_FUNCTION_ARGS)
 {
 	elog(LOG, "Upgrade session variables from version 1 to version 2");
 
