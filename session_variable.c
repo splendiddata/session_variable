@@ -34,6 +34,10 @@
 
 #include "session_variable.h"
 
+#if PG_VERSION_NUM < 170000
+#define AmBackgroundWorkerProcess() (IsBackgroundWorker)
+#endif
+
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC
 ;
@@ -87,7 +91,7 @@ void _PG_init()
 	Portal cursor;
 	char* installedVersion;
 
-	if (IsBackgroundWorker || pgInitInvoked)
+	if (AmBackgroundWorkerProcess() || pgInitInvoked)
 	{
 		return;
 	}
