@@ -70,8 +70,7 @@ select session_variable.drop('my_variable');
 ```
 
 <h2>Postgres versions</h2>
-The session_variable database extension has been tested on Postgres versions 
-10, 11, 12, 13, 14 and 15.
+The session_variable database extension runs on Postgres versions 12 - 17.
 <h2>Installation</h2>
 Install as a normal Posrgres database extension:<br>
  - Make sure pg_config points to the right places<br>
@@ -976,7 +975,7 @@ session_variable.init() function.
     session_variable.get_session_variable_version()
   </h3>
   <p>
-    Returns the code version of the extension, currently '3.3'. 
+    Returns the code version of the extension, currently '3.4'. 
   </p>
   <table class="arguments">
     <tr>
@@ -1177,3 +1176,5 @@ See: <a href="https://github.com/splendiddata/session_variable/issues/5"
 Adapted the new Postgres rule that extensions shalt not use 'create of not exists' and
 'create or replace' constructs.<br>
 Discontinued support for session_variables version 1.0.
+### version 3.4
+Just made ready for Postgres 17

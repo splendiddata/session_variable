@@ -13,9 +13,5 @@
 # this program.  If not, Client should obtain one via www.gnu.org/licenses/.
 #
 
-comment = 'session_variable - registration and manipulation of session variables and constants'
-encoding = 'UTF-8'
-default_version = '3.4'
-superuser = true
-relocatable = false
-schema = 'session_variable'
+comment = 'session_variable version 3.4'
+module_pathname = '$libdir/session_variable'
