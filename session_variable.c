@@ -84,7 +84,7 @@ Datum (*serialize)(SessionVariable* variable) = &serializeV2;
 Oid initialValueTypeOid = TEXTOID;
 
 void _PG_init(void);
-void _PG_init()
+void _PG_init(void)
 {
 	char* sql =
 			"select extversion from pg_extension where extname = 'session_variable'";
@@ -237,10 +237,10 @@ Datum coerceInput(Oid inputType, Oid internalType, int internalTypeLength,
 
 	if (internalTypeLength < 0)
 	{
-		mallocedResult = (Datum) malloc(VARSIZE(coercedInput));
-		SET_VARSIZE(mallocedResult, VARSIZE(coercedInput));
-		memcpy(VARDATA(mallocedResult), VARDATA(coercedInput),
-		VARSIZE(coercedInput) - VARHDRSZ);
+		mallocedResult = (Datum) malloc(VARSIZE(DatumGetPointer(coercedInput)));
+		SET_VARSIZE(DatumGetPointer(mallocedResult), VARSIZE(DatumGetPointer(coercedInput)));
+		memcpy(VARDATA(DatumGetPointer(mallocedResult)), VARDATA(DatumGetPointer(coercedInput)),
+		VARSIZE(DatumGetPointer(coercedInput)) - VARHDRSZ);
 	}
 	else if (internalTypeLength > SIZEOF_DATUM)
 	{
@@ -297,10 +297,10 @@ Datum coerceOutput(Oid internalType, int internalTypeLength, Datum internalData,
 	case COERCION_PATH_RELABELTYPE:
 		if (internalTypeLength < 0)
 		{
-			result = (Datum) palloc(VARSIZE(internalData));
-			SET_VARSIZE(result, VARSIZE(internalData));
-			memcpy(VARDATA(result), VARDATA(internalData),
-			VARSIZE(internalData) - VARHDRSZ);
+			result = (Datum) palloc(VARSIZE(DatumGetPointer(internalData)));
+			SET_VARSIZE(DatumGetPointer(result), VARSIZE(DatumGetPointer(internalData)));
+			memcpy(VARDATA(DatumGetPointer(result)), VARDATA(DatumGetPointer(internalData)),
+			VARSIZE(DatumGetPointer(internalData)) - VARHDRSZ);
 
 		}
 		else if (internalTypeLength > SIZEOF_DATUM)
@@ -526,7 +526,7 @@ Datum deserializeV2(text* varName, Oid dataType, Datum detoastedValue)
  *
  * @return int The number or SessionVariables created
  */
-int reload()
+int reload(void)
 {
 	char* sql = "select variable_name"
 			", is_constant"
@@ -628,7 +628,7 @@ int reload()
  * Checks if a no-argument function called session_variable.initialze_variables()
  * exists and, if so, invokes it.
  */
-void invokeInitialisationFunction()
+void invokeInitialisationFunction(void)
 {
 	Oid namespaceOid;
 	char* dbName;
@@ -1927,9 +1927,9 @@ PGDLLEXPORT Datum get_session_variable_version( PG_FUNCTION_ARGS)
 
 	pg_versioning_version = (Datum) palloc(
 	VARHDRSZ + strlen(sessionVariableVersion));
-	SET_VARSIZE(pg_versioning_version,
+	SET_VARSIZE(DatumGetPointer(pg_versioning_version),
 			VARHDRSZ + strlen(sessionVariableVersion));
-	memcpy(VARDATA(pg_versioning_version), sessionVariableVersion,
+	memcpy(VARDATA(DatumGetPointer(pg_versioning_version)), sessionVariableVersion,
 			strlen(sessionVariableVersion));
 	PG_RETURN_DATUM(pg_versioning_version);
 }

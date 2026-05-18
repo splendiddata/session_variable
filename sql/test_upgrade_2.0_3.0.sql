@@ -46,8 +46,10 @@ select session_variable.get('just_int', 15);
 select session_variable.get('just_smallint', null::smallint);
 
 select session_variable.get('const_boolean', null::boolean);
+\set VERBOSITY terse
 select session_variable.get_stable('const_boolean', null::boolean);           -- should fail as version 2.0 does not have function get_stable()  
 select session_variable.get_constant('const_boolean', null::boolean);         -- should fail as version 2.0 does not have function get_constant()
+\set VERBOSITY default
 
 select session_variable.init();
 
