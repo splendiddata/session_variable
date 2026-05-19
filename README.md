@@ -70,7 +70,8 @@ select session_variable.drop('my_variable');
 ```
 
 <h2>Postgres versions</h2>
-The session_variable database extension runs on Postgres versions 12 - 18.
+The session_variable database extension runs on Postgres versions 14 - 18.
+<p>Changes have been made to make it work on Postgres 19 as well. But as that Postgres version is not final yet, later changes may be needed.
 <h2>Installation</h2>
 Install as a normal Posrgres database extension:<br>
  - Make sure pg_config points to the right places<br>
