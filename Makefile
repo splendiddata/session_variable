@@ -1,4 +1,4 @@
-# Copyright (c) Splendid Data Product Development B.V. 2013 - 2022
+# Copyright (c) Splendid Data Product Development B.V. 2013 - 2026
 # 
 # This program is free software: You may redistribute and/or modify under the 
 # terms of the GNU General Public License as published by the Free Software 
@@ -16,7 +16,8 @@
 MODULE_big = session_variable
 OBJS = session_variable.o
 EXTENSION = session_variable
-DATA = session_variable--3.4.sql session_variable--3.3--3.4.sql \
+DATA = session_variable--3.5.sql session_variable--3.4--3.5.sql \
+       session_variable--3.4.sql session_variable--3.3--3.4.sql \
        session_variable--3.3.sql session_variable--3.2--3.3.sql \
        session_variable--3.2.sql session_variable--3.1--3.2.sql \
        session_variable--3.1.sql session_variable--3.0--3.1.sql \
@@ -31,7 +32,8 @@ REGRESS = test_session_variables \
           test_upgrade_3.0_3.1 \
           test_upgrade_3.1_3.2 \
           test_upgrade_3.2_3.3 \
-          test_upgrade_3.3_3.4
+          test_upgrade_3.3_3.4 \
+          test_upgrade_3.4_3.5
 
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)

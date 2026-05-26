@@ -218,9 +218,10 @@ session_variable.init() function.
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>22023</td>
+      <td valign="top">22023</td>
       <td>value must be of type <i>&lt;variable_type&gt;</i>,
-        but is of type <i>&lt;the actual type&gt;</i></td>
+        but is of type <i>&lt;the actual type&gt;</i><br>or<br>
+        A variable with type <i>&lt;variable_type&gt;</i> cannot be initialized this way</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -304,9 +305,10 @@ session_variable.init() function.
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>22023</td>
+      <td valign="top">22023</td>
       <td>value must be of type <i>&lt;constant_type&gt;</i>,
-        but is of type <i>&lt;the actual type&gt;</i></td>
+        but is of type <i>&lt;the actual type&gt;</i><br>or<br>
+        A variable with type <i>&lt;variable_type&gt;</i> cannot be initialized this way</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -385,9 +387,10 @@ session_variable.init() function.
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>22023</td>
+      <td valign="top">22023</td>
       <td>value must be of type <i>&lt;type&gt;</i>,
-        but is of type <i>&lt;the actual type&gt;</i></td>
+        but is of type <i>&lt;the actual type&gt;</i><br>or<br>
+        A variable with type <i>&lt;variable_type&gt;</i> cannot be initialized this way</td>
     </tr>
   </table>
   <p>
@@ -1179,3 +1182,11 @@ Adapted the new Postgres rule that extensions shalt not use 'create of not exist
 Discontinued support for session_variables version 1.0.
 ### version 3.4
 Just made ready for Postgres 17
+### version 3.5
+Made ready for Postgres 19
+<p>Apparently data types collection and icollection (from: <a href="https://github.com/aws/pgcollection" target = "_blank">https://github.com/aws/pgcollection>/a>
+do not initialize well from text. Default values for session variables are stored as text, so
+do cause a problem. <br>
+To avoid database process crashes, default values for collection and icollection data types are no 
+longer allowed.<br>
+The solution is to use the session_variable.session_variable_init() function for initialization.

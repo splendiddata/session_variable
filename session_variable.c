@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Splendid Data Product Development B.V. 2013 - 2024
+ * Copyright (c) Splendid Data Product Development B.V. 2013 - 2026
  *
  * This program is free software: You may redistribute and/or modify under the
  * terms of the GNU General Public License as published by the Free Software
@@ -74,14 +74,15 @@ SessionVariable* searchVariable(char* variableName, SessionVariable** lvl,
 Datum serializeV2(SessionVariable* variable);
 void updateRecursively(SessionVariable* var);
 void updateVariable(SessionVariable* variable);
+void canInitializeFromText(Oid typeOid);
 
 /*
  * Some fields to support both version 1 and version 2
  */
-Datum (*deserialize)(text* varName, Oid dataType,
+static Datum (*deserialize)(text* varName, Oid dataType,
 		Datum detoastedValue) = &deserializeV2;
-Datum (*serialize)(SessionVariable* variable) = &serializeV2;
-Oid initialValueTypeOid = TEXTOID;
+static Datum (*serialize)(SessionVariable* variable) = &serializeV2;
+static Oid initialValueTypeOid = TEXTOID;
 
 void _PG_init(void);
 void _PG_init(void)
@@ -142,6 +143,39 @@ int getTypeLength(Oid typeOid)
 	ReleaseSysCache(typTup);
 
 	return result;
+}
+/*
+ * Checks if a type can be initialized from text.
+ * 
+ * For example types collection and icollection have great trouble getting initialized
+ * from the text that was created as coll_instance::text. So initialization of these
+ * types should be done in the session_variable.session_variable_init() function.
+ * 
+ * The function throws an error for types collection and icollection.
+ *  
+ * @param Oid typeOid - identification of the value type
+ */
+void canInitializeFromText(Oid typeOid) {
+	HeapTuple typTup;
+	Form_pg_type typ;
+	char* typeName;
+
+	typTup = SearchSysCache1(TYPEOID, ObjectIdGetDatum(typeOid));
+	if (!HeapTupleIsValid(typTup))
+	{
+		elog(ERROR, "cache lookup failed for type %u", typeOid);
+	}
+	typ = (Form_pg_type) GETSTRUCT(typTup);
+	typeName = pstrdup(NameStr(typ->typname));
+	ReleaseSysCache(typTup);
+	if (!strcmp(typeName, "icollection") || !strcmp(typeName, "collection")) {
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("A variable with type %s cannot be initialized this way",
+						 typeName),
+				 errhint("Data type %s does not initialize well from text. Please use session_variable.session_variable_init() to initialize this variable.",
+						 typeName)));
+	}
 }
 
 /*
@@ -1068,6 +1102,8 @@ PGDLLEXPORT Datum create_variable( PG_FUNCTION_ARGS)
 	isNull = PG_NARGS() < 3 || PG_ARGISNULL(2);
 	if (!isNull)
 	{
+		canInitializeFromText(typeOid);
+
 		contentTypeOid = get_fn_expr_argtype(fcinfo->flinfo, 2);
 		if (typeOid == contentTypeOid)
 		{
@@ -1172,6 +1208,8 @@ PGDLLEXPORT Datum create_constant( PG_FUNCTION_ARGS)
 
 	if (!PG_ARGISNULL(2))
 	{
+		canInitializeFromText(typeOid);
+
 		contentTypeOid = get_fn_expr_argtype(fcinfo->flinfo, 2);
 		if (typeOid == contentTypeOid)
 		{
@@ -1399,6 +1437,7 @@ PGDLLEXPORT Datum alter_value( PG_FUNCTION_ARGS)
 	}
 	else
 	{
+		canInitializeFromText(variable->type);
 
 		if (newValueTypeLength < 0)
 		{
