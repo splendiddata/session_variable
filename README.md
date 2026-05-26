@@ -1184,7 +1184,7 @@ Discontinued support for session_variables version 1.0.
 Just made ready for Postgres 17
 ### version 3.5
 Made ready for Postgres 19
-<p>Apparently data types collection and icollection (from: <a href="https://github.com/aws/pgcollection" target = "_blank">https://github.com/aws/pgcollection>/a>
+<p>Apparently data types collection and icollection (from: <a href="https://github.com/aws/pgcollection" target = "_blank">https://github.com/aws/pgcollection</a>
 do not initialize well from text. Default values for session variables are stored as text, so
 do cause a problem. <br>
 To avoid database process crashes, default values for collection and icollection data types are no 
