@@ -16,7 +16,8 @@
 MODULE_big = session_variable
 OBJS = session_variable.o
 EXTENSION = session_variable
-DATA = session_variable--3.5.sql session_variable--3.4--3.5.sql \
+DATA = session_variable--3.6.sql session_variable--3.5--3.6.sql \
+       session_variable--3.5.sql session_variable--3.4--3.5.sql \
        session_variable--3.4.sql session_variable--3.3--3.4.sql \
        session_variable--3.3.sql session_variable--3.2--3.3.sql \
        session_variable--3.2.sql session_variable--3.1--3.2.sql \
@@ -33,7 +34,8 @@ REGRESS = test_session_variables \
           test_upgrade_3.1_3.2 \
           test_upgrade_3.2_3.3 \
           test_upgrade_3.3_3.4 \
-          test_upgrade_3.4_3.5
+          test_upgrade_3.4_3.5 \
+          test_upgrade_3.5_3.6
 
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)

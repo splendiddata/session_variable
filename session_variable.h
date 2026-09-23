@@ -18,7 +18,7 @@
 #ifndef SESSION_VARIABLE_H
 #define SESSION_VARIABLE_H
 
-static char* sessionVariableVersion = "3.5";
+static char* sessionVariableVersion = "3.6";
 
 /*
  * Loads the session variables from the session_variable.variables table

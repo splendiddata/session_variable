@@ -45,7 +45,6 @@ PG_MODULE_MAGIC
 
 static bool virgin = true;
 static SessionVariable* variables = NULL;
-static bool pgInitInvoked = false;
 static bool isExecutingInitialisationFunction = false;
 
 /*
@@ -60,7 +59,7 @@ Datum coerceOutput(Oid internalType, int internalTypeLength, Datum internalData,
 SessionVariable* createVariable(text* variableName, bool isConst, Oid valueType,
 		int typeLength, bool isNull, Datum value);
 void deleteVariable(text* variablename);
-Datum deserializeV2(text* varName, Oid dataType, Datum detoastedValue);
+Datum deserialize(text* varName, Oid dataType, Datum detoastedValue);
 int getTypeLength(Oid typeOid);
 bool insertVariable(SessionVariable* variable);
 void invokeInitialisationFunction(void);
@@ -71,7 +70,7 @@ bool saveNewVariable(text* variableName, bool isConst, Oid valueType,
 		int typeLength, bool isNull, Datum value);
 SessionVariable* searchVariable(char* variableName, SessionVariable** lvl,
 		bool* found);
-Datum serializeV2(SessionVariable* variable);
+Datum serialize(SessionVariable* variable);
 void updateRecursively(SessionVariable* var);
 void updateVariable(SessionVariable* variable);
 void canInitializeFromText(Oid typeOid);
@@ -79,47 +78,7 @@ void canInitializeFromText(Oid typeOid);
 /*
  * Some fields to support both version 1 and version 2
  */
-static Datum (*deserialize)(text* varName, Oid dataType,
-		Datum detoastedValue) = &deserializeV2;
-static Datum (*serialize)(SessionVariable* variable) = &serializeV2;
 static Oid initialValueTypeOid = TEXTOID;
-
-void _PG_init(void);
-void _PG_init(void)
-{
-	char* sql =
-			"select extversion from pg_extension where extname = 'session_variable'";
-	Portal cursor;
-	char* installedVersion;
-
-	if (AmBackgroundWorkerProcess() || pgInitInvoked)
-	{
-		return;
-	}
-	pgInitInvoked = true;
-
-	/*
-	 * Read the session_variable.variables table and update each row to
-	 * version 2 format
-	 */
-	SPI_connect();
-	cursor = SPI_cursor_open_with_args(NULL, sql, 0, NULL, NULL, NULL, true,
-	CURSOR_OPT_BINARY | CURSOR_OPT_NO_SCROLL);
-	SPI_cursor_fetch(cursor, true, 1);
-	installedVersion = SPI_getvalue(SPI_tuptable->vals[0],
-			SPI_tuptable->tupdesc, 1);
-	SPI_cursor_close(cursor);
-	SPI_finish();
-
-    if (!strcmp(installedVersion, "1.0")) {
-        ereport(ERROR,
-            (errcode(ERRCODE_DATA_CORRUPTED),(errmsg("session_variable.variables table contains unsupported data"))));
-    }
-
-	deserialize = &deserializeV2;
-	serialize = &serializeV2;
-	initialValueTypeOid = TEXTOID;
-}
 /*
  * Finds the type length in the type cache. -1 for varlena
  *
@@ -514,7 +473,7 @@ void buildBTree(void)
 	}
 }
 
-Datum deserializeV2(text* varName, Oid dataType, Datum detoastedValue)
+Datum deserialize(text* varName, Oid dataType, Datum detoastedValue)
 {
 	HeapTuple typTup;
 	Form_pg_type pgTyp;
@@ -732,7 +691,7 @@ PGDLLEXPORT Datum is_executing_variable_initialisation( PG_FUNCTION_ARGS)
  * @return Datum - The initial value serialized using the type's outfunction
  *                 or null if the variable's content was null
  */
-Datum serializeV2(SessionVariable* variable)
+Datum serialize(SessionVariable* variable)
 {
 	HeapTuple typTup;
 	Form_pg_type typ;
@@ -1991,22 +1950,4 @@ void updateRecursively(SessionVariable* var)
 	updateRecursively(var->prior);
 	updateRecursively(var->next);
 	updateVariable(var);
-}
-
-Datum upgrade_1_to_2(PG_FUNCTION_ARGS);
-/*
- * Updates all loaded variables - storing them in the right format for version 2
- */
-PG_FUNCTION_INFO_V1(upgrade_1_to_2);
-PGDLLEXPORT Datum upgrade_1_to_2(PG_FUNCTION_ARGS)
-{
-	elog(LOG, "Upgrade session variables from version 1 to version 2");
-
-	deserialize = &deserializeV2;
-	serialize = &serializeV2;
-	initialValueTypeOid = TEXTOID;
-
-	updateRecursively(variables);
-
-	PG_RETURN_VOID() ;
 }

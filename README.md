@@ -1190,3 +1190,6 @@ do cause a problem. <br>
 To avoid database process crashes, default values for collection and icollection data types are no 
 longer allowed.<br>
 The solution is to use the session_variable.session_variable_init() function for initialization.
+### version 3.6
+Removed initialisation code that was necessary to update the session_variable extension from version 1 to version 2.
+This update needed to be done a very long time ago, so is obsolete now.
